@@ -1,0 +1,11 @@
+DROP TABLE IF EXISTS journal_lines;
+DROP TABLE IF EXISTS journal_entries;
+DROP TABLE IF EXISTS accounts;
+DROP TABLE IF EXISTS payslips;
+DROP TABLE IF EXISTS payroll_runs;
+DROP TABLE IF EXISTS attendance;
+DROP TABLE IF EXISTS employees;
+DROP TABLE IF EXISTS refresh_tokens;
+DROP TABLE IF EXISTS tenant_users;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS tenants;

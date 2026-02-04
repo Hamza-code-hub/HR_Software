@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+env:
+  GO_VERSION: '1.21'
+
+jobs:
+  backend-build:
+    name: Backend build & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: backend
+          key: go-${{ hashFiles('backend/go.sum') }}
+          restore-keys: go-
+
+      - name: Build
+        run: |
+          cd backend
+          go build -v ./cmd/api
+
+      - name: Test
+        run: |
+          cd backend
+          go test -v -count=1 ./...
+
+  backend-docker:
+    name: Backend Docker build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: hr-saas-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  frontend-build:
+    name: Flutter build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: |
+          cd frontend
+          flutter pub get
+
+      - name: Analyze
+        run: |
+          cd frontend
+          flutter analyze lib --no-fatal-infos
+
+      - name: Build web
+        run: |
+          cd frontend
+          flutter build web --no-tree-shake-icons
