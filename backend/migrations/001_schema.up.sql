@@ -42,13 +42,16 @@ CREATE TABLE IF NOT EXISTS employees (
   created_at TIMESTAMP DEFAULT now()
 );
 
-CREATE INDEX idx_employees_tenant_id ON employees(tenant_id);
-CREATE INDEX idx_employees_deleted_at ON employees(deleted_at) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_employees_tenant_id ON employees(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_employees_deleted_at ON employees(deleted_at) WHERE deleted_at IS NULL;
 
 ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY tenant_employee_policy ON employees
-  USING (tenant_id = current_setting('app.tenant_id', true)::UUID);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'tenant_employee_policy' AND tablename = 'employees') THEN
+    CREATE POLICY tenant_employee_policy ON employees USING (tenant_id = current_setting('app.tenant_id', true)::UUID);
+  END IF;
+END $$;
 
 -- ATTENDANCE
 CREATE TABLE IF NOT EXISTS attendance (
@@ -63,12 +66,15 @@ CREATE TABLE IF NOT EXISTS attendance (
   created_at TIMESTAMP DEFAULT now()
 );
 
-CREATE INDEX idx_attendance_tenant_date ON attendance(tenant_id, date);
-CREATE UNIQUE INDEX idx_attendance_tenant_employee_date ON attendance(tenant_id, employee_id, date);
+CREATE INDEX IF NOT EXISTS idx_attendance_tenant_date ON attendance(tenant_id, date);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_attendance_tenant_employee_date ON attendance(tenant_id, employee_id, date);
 
 ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
-CREATE POLICY tenant_attendance_policy ON attendance
-  USING (tenant_id = current_setting('app.tenant_id', true)::UUID);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'tenant_attendance_policy' AND tablename = 'attendance') THEN
+    CREATE POLICY tenant_attendance_policy ON attendance USING (tenant_id = current_setting('app.tenant_id', true)::UUID);
+  END IF;
+END $$;
 
 -- PAYROLL RUN
 CREATE TABLE IF NOT EXISTS payroll_runs (
@@ -80,11 +86,14 @@ CREATE TABLE IF NOT EXISTS payroll_runs (
   created_at TIMESTAMP DEFAULT now()
 );
 
-CREATE UNIQUE INDEX idx_payroll_run_tenant_month_year ON payroll_runs(tenant_id, month, year);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_payroll_run_tenant_month_year ON payroll_runs(tenant_id, month, year);
 
 ALTER TABLE payroll_runs ENABLE ROW LEVEL SECURITY;
-CREATE POLICY tenant_payroll_runs_policy ON payroll_runs
-  USING (tenant_id = current_setting('app.tenant_id', true)::UUID);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'tenant_payroll_runs_policy' AND tablename = 'payroll_runs') THEN
+    CREATE POLICY tenant_payroll_runs_policy ON payroll_runs USING (tenant_id = current_setting('app.tenant_id', true)::UUID);
+  END IF;
+END $$;
 
 -- PAYSLIPS
 CREATE TABLE IF NOT EXISTS payslips (
@@ -101,11 +110,14 @@ CREATE TABLE IF NOT EXISTS payslips (
   created_at TIMESTAMP DEFAULT now()
 );
 
-CREATE INDEX idx_payslips_tenant_run ON payslips(tenant_id, payroll_run_id);
+CREATE INDEX IF NOT EXISTS idx_payslips_tenant_run ON payslips(tenant_id, payroll_run_id);
 
 ALTER TABLE payslips ENABLE ROW LEVEL SECURITY;
-CREATE POLICY tenant_payslips_policy ON payslips
-  USING (tenant_id = current_setting('app.tenant_id', true)::UUID);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'tenant_payslips_policy' AND tablename = 'payslips') THEN
+    CREATE POLICY tenant_payslips_policy ON payslips USING (tenant_id = current_setting('app.tenant_id', true)::UUID);
+  END IF;
+END $$;
 
 -- ACCOUNTS
 CREATE TABLE IF NOT EXISTS accounts (
@@ -118,11 +130,14 @@ CREATE TABLE IF NOT EXISTS accounts (
   created_at TIMESTAMP DEFAULT now()
 );
 
-CREATE INDEX idx_accounts_tenant_id ON accounts(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_accounts_tenant_id ON accounts(tenant_id);
 
 ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY tenant_accounts_policy ON accounts
-  USING (tenant_id = current_setting('app.tenant_id', true)::UUID);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'tenant_accounts_policy' AND tablename = 'accounts') THEN
+    CREATE POLICY tenant_accounts_policy ON accounts USING (tenant_id = current_setting('app.tenant_id', true)::UUID);
+  END IF;
+END $$;
 
 -- JOURNAL
 CREATE TABLE IF NOT EXISTS journal_entries (
@@ -133,11 +148,14 @@ CREATE TABLE IF NOT EXISTS journal_entries (
   created_at TIMESTAMP DEFAULT now()
 );
 
-CREATE INDEX idx_journal_entries_tenant_date ON journal_entries(tenant_id, date);
+CREATE INDEX IF NOT EXISTS idx_journal_entries_tenant_date ON journal_entries(tenant_id, date);
 
 ALTER TABLE journal_entries ENABLE ROW LEVEL SECURITY;
-CREATE POLICY tenant_journal_entries_policy ON journal_entries
-  USING (tenant_id = current_setting('app.tenant_id', true)::UUID);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'tenant_journal_entries_policy' AND tablename = 'journal_entries') THEN
+    CREATE POLICY tenant_journal_entries_policy ON journal_entries USING (tenant_id = current_setting('app.tenant_id', true)::UUID);
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS journal_lines (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -149,11 +167,14 @@ CREATE TABLE IF NOT EXISTS journal_lines (
   created_at TIMESTAMP DEFAULT now()
 );
 
-CREATE INDEX idx_journal_lines_entry ON journal_lines(journal_entry_id);
+CREATE INDEX IF NOT EXISTS idx_journal_lines_entry ON journal_lines(journal_entry_id);
 
 ALTER TABLE journal_lines ENABLE ROW LEVEL SECURITY;
-CREATE POLICY tenant_journal_lines_policy ON journal_lines
-  USING (tenant_id = current_setting('app.tenant_id', true)::UUID);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'tenant_journal_lines_policy' AND tablename = 'journal_lines') THEN
+    CREATE POLICY tenant_journal_lines_policy ON journal_lines USING (tenant_id = current_setting('app.tenant_id', true)::UUID);
+  END IF;
+END $$;
 
 -- Refresh tokens for JWT
 CREATE TABLE IF NOT EXISTS refresh_tokens (
@@ -164,4 +185,4 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
   created_at TIMESTAMP DEFAULT now()
 );
 
-CREATE INDEX idx_refresh_tokens_user ON refresh_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
