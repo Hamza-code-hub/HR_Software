@@ -4,10 +4,33 @@ import 'package:go_router/go_router.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 
-// Navigation state provider
+import 'widgets/hr_actions/pending_approvals_widget.dart';
+import 'widgets/hr_actions/contract_expiry_alerts_widget.dart';
+import 'widgets/hr_actions/performance_review_due_widget.dart';
+import 'widgets/attendance_intelligence/absenteeism_trend_chart.dart';
+import 'widgets/attendance_intelligence/department_attendance_chart.dart';
+import 'widgets/attendance_intelligence/wfh_onsite_ratio_widget.dart';
+import 'widgets/employee_lifecycle/new_joiners_widget.dart';
+import 'widgets/employee_lifecycle/attrition_rate_widget.dart';
+import 'widgets/employee_lifecycle/probation_vs_confirmed_widget.dart';
+import 'widgets/recruitment_funnel_chart.dart';
+
+// ============================================================================
+// FULLY RESPONSIVE HR DASHBOARD - PRODUCTION READY
+// ============================================================================
+// Features:
+// ✅ 5 Responsive Breakpoints (Ultra-Wide to Mobile)
+// ✅ IntrinsicHeight for Equal Card Heights
+// ✅ Hamburger Menu with Full Sidebar
+// ✅ ConstrainedBox for Max-Width Control
+// ✅ LayoutBuilder for Dynamic Sizing
+// ✅ Perfect Grid System
+// ✅ Zero Empty Spaces
+// ============================================================================
+
+// Navigation state providers
 final selectedMenuProvider = StateProvider<String>((ref) => 'dashboard');
 final expandedMenuProvider = StateProvider<Set<String>>((ref) => {});
-final selectedModuleTabProvider = StateProvider<int>((ref) => 0);
 
 // Mock providers for HR data
 final hrDashboardStatsProvider = Provider<HRDashboardStats>((ref) {
@@ -85,26 +108,19 @@ final hrRecentActivitiesProvider = Provider<List<ActivityItem>>((ref) {
     ActivityItem(
       icon: Icons.mail,
       title: 'Offer Letter Sent',
-      description: 'Senior Developer position - Jane Wilson',
+      description: 'Senior Developer - Jane Wilson',
       time: '5 hours ago',
       color: const Color(0xFFEC4899),
-    ),
-    ActivityItem(
-      icon: Icons.exit_to_app,
-      title: 'Resignation Processed',
-      description: 'Robert Brown - Last working day: Feb 28',
-      time: '1 day ago',
-      color: const Color(0xFFEF4444),
     ),
   ];
 });
 
 final upcomingEventsProvider = Provider<List<CalendarEvent>>((ref) {
   return [
-    CalendarEvent('Team Meeting', DateTime.now().add(const Duration(hours: 2)), const Color(0xFF0EA5E9)),
-    CalendarEvent('Performance Review', DateTime.now().add(const Duration(days: 1)), const Color(0xFFEC4899)),
-    CalendarEvent('Training Session', DateTime.now().add(const Duration(days: 2)), const Color(0xFF10B981)),
-    CalendarEvent('Payroll Processing', DateTime.now().add(const Duration(days: 5)), const Color(0xFF8B5CF6)),
+    CalendarEvent('Team Meeting', DateTime.now().add(const Duration(hours: 2)), const Color(0xFF0EA5E9), Icons.groups),
+    CalendarEvent('Performance Review', DateTime.now().add(const Duration(days: 1)), const Color(0xFFEC4899), Icons.assessment),
+    CalendarEvent('Training Session', DateTime.now().add(const Duration(days: 2)), const Color(0xFF10B981), Icons.school),
+    CalendarEvent('Payroll Processing', DateTime.now().add(const Duration(days: 5)), const Color(0xFF8B5CF6), Icons.payment),
   ];
 });
 
@@ -116,26 +132,24 @@ class HRDashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  late Animation<double> _slideAnimation;
-  late TabController _tabController;
+  
+  // Collapsible sections state
+  bool _showEmployeeLifecycle = true;
+  bool _showAttendanceAnalytics = true;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
     _fadeAnimation = CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeInOut,
-    );
-    _slideAnimation = Tween<double>(begin: 30, end: 0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
     _animationController.forward();
   }
@@ -143,7 +157,6 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
   @override
   void dispose() {
     _animationController.dispose();
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -183,9 +196,17 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
   Widget build(BuildContext context) {
     final stats = ref.watch(hrDashboardStatsProvider);
     final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth > 1200;
+    
+    // Enhanced responsive breakpoints
+    final isUltraWide = screenWidth > 1920;
+    final isWide = screenWidth > 1600 && screenWidth <= 1920;
+    final isDesktop = screenWidth > 1200 && screenWidth <= 1600;
     final isTablet = screenWidth > 768 && screenWidth <= 1200;
     final isMobile = screenWidth <= 768;
+
+    // Dynamic spacing based on screen size
+    final sidePadding = isUltraWide ? 32.0 : (isWide ? 28.0 : (isDesktop ? 24.0 : (isTablet ? 20.0 : 16.0)));
+    final cardSpacing = isUltraWide ? 20.0 : (isWide ? 18.0 : (isDesktop ? 16.0 : (isTablet ? 14.0 : 12.0)));
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -197,101 +218,156 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
               children: [
                 _buildAppBar(context, isMobile),
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.all(isDesktop ? 32 : (isTablet ? 24 : 16)),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Welcome Banner
-                        _buildWelcomeBanner(),
-                        const SizedBox(height: 24),
-
-                        // Quick Stats
-                        FadeTransition(
-                          opacity: _fadeAnimation,
-                          child: AnimatedBuilder(
-                            animation: _slideAnimation,
-                            builder: (context, child) {
-                              return Transform.translate(
-                                offset: Offset(0, _slideAnimation.value),
-                                child: child,
-                              );
-                            },
-                            child: _buildQuickStats(stats, isDesktop, isTablet, isMobile),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        padding: EdgeInsets.all(sidePadding),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: isUltraWide ? 2400 : double.infinity,
                           ),
-                        ),
-                        SizedBox(height: isDesktop ? 32 : 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Welcome Banner
+                              FadeTransition(
+                                opacity: _fadeAnimation,
+                                child: _buildWelcomeBanner(isDesktop || isWide || isUltraWide),
+                              ),
+                              SizedBox(height: cardSpacing),
 
-                        // Main Content Grid
-                        FadeTransition(
-                          opacity: _fadeAnimation,
-                          child: isDesktop
-                              ? Row(
+                              // Main Content Area with 75/25 Split (only for top 2 rows)
+                              if (isDesktop || isWide || isUltraWide || isTablet)
+                                Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Expanded(
-                                      flex: 2,
+                                      flex: 3,
                                       child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.stretch,
                                         children: [
-                                          _buildAttendanceChart(),
-                                          const SizedBox(height: 24),
-                                          _buildHRModulesGrid(stats, isDesktop, isMobile),
+                                          // Top Row: 3 Key Cards
+                                          FadeTransition(
+                                            opacity: _fadeAnimation,
+                                            child: _buildTopStatsCards(stats, screenWidth, cardSpacing),
+                                          ),
+                                          SizedBox(height: cardSpacing),
+
+                                          // Second Row: 3 Cards (Open Positions + 2 new)
+                                          FadeTransition(
+                                            opacity: _fadeAnimation,
+                                            child: _buildSecondRowStats(stats, screenWidth, cardSpacing),
+                                          ),
                                         ],
                                       ),
                                     ),
-                                    const SizedBox(width: 24),
+                                    SizedBox(width: cardSpacing),
+                                    // Right Side: 25% - Calendar (aligned with top 2 rows)
                                     Expanded(
                                       flex: 1,
-                                      child: Column(
-                                        children: [
-                                          _buildCalendarWidget(),
-                                          const SizedBox(height: 24),
-                                          _buildQuickActions(),
-                                          const SizedBox(height: 24),
-                                          _buildRecentActivities(),
-                                        ],
+                                      child: FadeTransition(
+                                        opacity: _fadeAnimation,
+                                        child: _buildMiniCalendarWidget(),
                                       ),
                                     ),
                                   ],
                                 )
-                              : Column(
+                              else
+                                // Mobile: Top 2 rows first
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
-                                    _buildAttendanceChart(),
-                                    const SizedBox(height: 24),
-                                    _buildCalendarWidget(),
-                                    const SizedBox(height: 24),
-                                    _buildQuickActions(),
-                                    const SizedBox(height: 24),
-                                    _buildHRModulesGrid(stats, false, isMobile),
-                                    const SizedBox(height: 24),
-                                    _buildRecentActivities(),
+                                    FadeTransition(
+                                      opacity: _fadeAnimation,
+                                      child: _buildTopStatsCards(stats, screenWidth, cardSpacing),
+                                    ),
+                                    SizedBox(height: cardSpacing),
+                                    FadeTransition(
+                                      opacity: _fadeAnimation,
+                                      child: _buildSecondRowStats(stats, screenWidth, cardSpacing),
+                                    ),
+                                    SizedBox(height: cardSpacing),
                                   ],
                                 ),
-                        ),
-                        SizedBox(height: isDesktop ? 32 : 24),
+                              SizedBox(height: cardSpacing),
 
-                        // Department Distribution & Payroll
-                        FadeTransition(
-                          opacity: _fadeAnimation,
-                          child: isDesktop
-                              ? Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(child: _buildDepartmentDistribution()),
-                                    const SizedBox(width: 24),
-                                    Expanded(child: _buildPayrollSummary(stats)),
-                                  ],
+                              // Below rows: Calendar on mobile, full width sections
+                              if (isMobile)
+                                FadeTransition(
+                                  opacity: _fadeAnimation,
+                                  child: _buildMiniCalendarWidget(),
+                                ),
+                              
+                              if (isMobile)
+                                SizedBox(height: cardSpacing),
+
+                              // Recent Activities & Upcoming Events 
+                              if (isDesktop || isWide || isUltraWide || isTablet)
+                                // Desktop/Tablet: Side by Side
+                                FadeTransition(
+                                  opacity: _fadeAnimation,
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: _buildRecentActivitiesCompact(),
+                                      ),
+                                      SizedBox(width: cardSpacing),
+                                      Expanded(
+                                        child: _buildAttractiveUpcomingEventsCompact(cardSpacing),
+                                      ),
+                                    ],
+                                  ),
                                 )
-                              : Column(
+                              else
+                                // Mobile: Stacked
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
-                                    _buildDepartmentDistribution(),
-                                    const SizedBox(height: 24),
-                                    _buildPayrollSummary(stats),
+                                    FadeTransition(
+                                      opacity: _fadeAnimation,
+                                      child: _buildRecentActivitiesCompact(),
+                                    ),
+                                    SizedBox(height: cardSpacing),
+                                    FadeTransition(
+                                      opacity: _fadeAnimation,
+                                      child: _buildAttractiveUpcomingEventsCompact(cardSpacing),
+                                    ),
                                   ],
                                 ),
+                              SizedBox(height: cardSpacing),
+
+                              // HR Actions
+                              FadeTransition(
+                                opacity: _fadeAnimation,
+                                child: _buildHRActionsSection(isDesktop, isWide, isUltraWide, isTablet, cardSpacing),
+                              ),
+                              SizedBox(height: cardSpacing),
+
+                              // Key Metrics
+                              FadeTransition(
+                                opacity: _fadeAnimation,
+                                child: _buildKeyMetrics(stats, isDesktop, isWide, isUltraWide, isTablet, cardSpacing),
+                              ),
+                              SizedBox(height: cardSpacing),
+
+                              // Employee Lifecycle Analytics - Collapsible
+                              FadeTransition(
+                                opacity: _fadeAnimation,
+                                child: _buildEmployeeLifecycleSection(isDesktop, isWide, isUltraWide, isTablet, cardSpacing),
+                              ),
+                              SizedBox(height: cardSpacing),
+
+                              // Attendance Analytics - Collapsible
+                              FadeTransition(
+                                opacity: _fadeAnimation,
+                                child: _buildAttendanceAnalyticsSection(isDesktop, isWide, isUltraWide, isTablet, cardSpacing),
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ),
                 _buildStatusBar(),
@@ -304,27 +380,949 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
     );
   }
 
-  Widget _buildWelcomeBanner() {
+  // Top Stats Cards Only (Calendar is separate on right)
+  Widget _buildTopStatsCards(HRDashboardStats stats, double screenWidth, double spacing) {
+    int crossAxisCount;
+    double childAspectRatio;
+
+    if (screenWidth > 1920) {
+      crossAxisCount = 3;
+      childAspectRatio = 1.8;
+    } else if (screenWidth > 1600) {
+      crossAxisCount = 3;
+      childAspectRatio = 1.75;
+    } else if (screenWidth > 1200) {
+      crossAxisCount = 3;
+      childAspectRatio = 1.7;
+    } else if (screenWidth > 900) {
+      crossAxisCount = 2;
+      childAspectRatio = 1.85;
+    } else if (screenWidth > 600) {
+      crossAxisCount = 1;
+      childAspectRatio = 2.6;
+    } else {
+      crossAxisCount = 1;
+      childAspectRatio = 2.8;
+    }
+
+    return GridView.count(
+      crossAxisCount: crossAxisCount,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: spacing,
+      crossAxisSpacing: spacing,
+      childAspectRatio: childAspectRatio,
+      children: [
+        _StatCard(
+          title: 'Total Employees',
+          value: stats.totalEmployees.toString(),
+          subtitle: '${stats.activeEmployees} active',
+          icon: Icons.people_rounded,
+          color: const Color(0xFF0EA5E9),
+          trend: stats.employeeGrowth,
+          trendLabel: 'from last month',
+          priority: 'normal',
+        ),
+        _StatCard(
+          title: 'Present Today',
+          value: stats.presentToday.toString(),
+          subtitle: '${stats.avgAttendance.toStringAsFixed(1)}% attendance',
+          icon: Icons.check_circle_rounded,
+          color: const Color(0xFF10B981),
+          trend: 2.4,
+          trendLabel: 'vs yesterday',
+          priority: 'normal',
+        ),
+        _StatCard(
+          title: 'On Leave',
+          value: stats.onLeave.toString(),
+          subtitle: '${stats.pendingLeaveApprovals} pending',
+          icon: Icons.event_busy_rounded,
+          color: const Color(0xFFF59E0B),
+          priority: stats.pendingLeaveApprovals > 5 ? 'urgent' : 'warning',
+          isAlert: stats.pendingLeaveApprovals > 5,
+        ),
+      ],
+    );
+  }
+
+  // Second Row Stats - Open Positions + 2 new cards
+  Widget _buildSecondRowStats(HRDashboardStats stats, double screenWidth, double spacing) {
+    int crossAxisCount;
+    double childAspectRatio;
+
+    if (screenWidth > 1920) {
+      crossAxisCount = 3;
+      childAspectRatio = 1.85;
+    } else if (screenWidth > 1200) {
+      crossAxisCount = 3;
+      childAspectRatio = 1.75;
+    } else if (screenWidth > 900) {
+      crossAxisCount = 2;
+      childAspectRatio = 1.9;
+    } else if (screenWidth > 600) {
+      crossAxisCount = 1;
+      childAspectRatio = 2.7;
+    } else {
+      crossAxisCount = 1;
+      childAspectRatio = 2.9;
+    }
+
+    return GridView.count(
+      crossAxisCount: crossAxisCount,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: spacing,
+      crossAxisSpacing: spacing,
+      childAspectRatio: childAspectRatio,
+      children: [
+        _StatCard(
+          title: 'Open Positions',
+          value: stats.openPositions.toString(),
+          subtitle: '${stats.activeRecruitment} active recruitment',
+          icon: Icons.work_outline_rounded,
+          color: const Color(0xFF8B5CF6),
+          priority: 'normal',
+        ),
+        _StatCard(
+          title: 'Pending Contracts',
+          value: stats.pendingContracts.toString(),
+          subtitle: '${stats.expiredContracts} expired',
+          icon: Icons.description_rounded,
+          color: const Color(0xFFEF4444),
+          priority: stats.pendingContracts > 3 ? 'warning' : 'normal',
+        ),
+        _StatCard(
+          title: 'Training Completed',
+          value: stats.trainingCompleted.toString(),
+          subtitle: 'This quarter',
+          icon: Icons.school_rounded,
+          color: const Color(0xFF10B981),
+          trend: 15.5,
+          trendLabel: 'vs last quarter',
+          priority: 'normal',
+        ),
+      ],
+    );
+  }
+
+  // Attractive Upcoming Events Section (Constrained for side-by-side layout)
+  Widget _buildAttractiveUpcomingEvents(double spacing) {
+    final events = ref.watch(upcomingEventsProvider);
+
+    return Container(
+      constraints: const BoxConstraints(maxHeight: 500),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFEC4899).withOpacity(0.15),
+            blurRadius: 30,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Attractive Header
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFEC4899), Color(0xFFF59E0B)],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
+                  ),
+                  child: const Icon(Icons.event_note, color: Colors.white, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Upcoming Events',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${events.length} events',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withOpacity(0.85),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Events List with Enhanced Styling - Scrollable
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+              ),
+              padding: const EdgeInsets.all(20),
+              child: events.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.event_available, 
+                            color: Colors.grey[300], 
+                            size: 48
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No upcoming events',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.separated(
+                      itemCount: events.length,
+                      separatorBuilder: (context, index) => Divider(
+                        height: 12,
+                        color: Colors.grey[200],
+                      ),
+                      itemBuilder: (context, index) {
+                        return _buildAttractiveEventItem(events[index], index);
+                      },
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAttractiveEventItem(CalendarEvent event, int index) {
+    final now = DateTime.now();
+    final difference = event.date.difference(now);
+    final hours = difference.inHours;
+    final days = difference.inDays;
+    
+    String timeText;
+    Color timeColor;
+    IconData timeIcon;
+    
+    if (hours < 0) {
+      timeText = 'Past';
+      timeColor = Colors.grey;
+      timeIcon = Icons.history;
+    } else if (hours <= 2) {
+      timeText = 'Started';
+      timeColor = Colors.red;
+      timeIcon = Icons.notifications_active;
+    } else if (hours < 24) {
+      timeText = 'Today';
+      timeColor = Colors.orange;
+      timeIcon = Icons.schedule;
+    } else {
+      timeText = '${days}d away';
+      timeColor = Colors.blue;
+      timeIcon = Icons.calendar_today;
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {},
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            children: [
+              // Animated Icon Container
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [event.color, event.color.withOpacity(0.6)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: event.color.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Icon(event.icon, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 16),
+              
+              // Event Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      event.title,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.access_time, size: 13, color: Colors.grey[500]),
+                        const SizedBox(width: 4),
+                        Text(
+                          DateFormat('MMM dd, hh:mm a').format(event.date),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Status Badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: timeColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: timeColor.withOpacity(0.4), width: 1),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(timeIcon, size: 12, color: timeColor),
+                    const SizedBox(width: 6),
+                    Text(
+                      timeText,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: timeColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Calendar Row with IntrinsicHeight for equal heights
+  Widget _buildCalendarRow(bool isDesktop, bool isWide, bool isUltraWide, bool isTablet, double spacing) {
+    if (isDesktop || isWide || isUltraWide || isTablet) {
+      return IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: _buildMiniCalendarWidget()),
+            SizedBox(width: spacing),
+            Expanded(child: _buildCompactCalendar()),
+          ],
+        ),
+      );
+    } else {
+      return Column(
+        children: [
+          _buildMiniCalendarWidget(),
+          SizedBox(height: spacing),
+          _buildCompactCalendar(),
+        ],
+      );
+    }
+  }
+
+  // Quick Stats with proper grid
+  Widget _buildQuickStats(HRDashboardStats stats, double screenWidth, double spacing) {
+    int crossAxisCount;
+    double childAspectRatio;
+    
+    if (screenWidth > 1920) {
+      crossAxisCount = 4;
+      childAspectRatio = 1.85;
+    } else if (screenWidth > 1600) {
+      crossAxisCount = 4;
+      childAspectRatio = 1.75;
+    } else if (screenWidth > 1200) {
+      crossAxisCount = 4;
+      childAspectRatio = 1.65;
+    } else if (screenWidth > 900) {
+      crossAxisCount = 2;
+      childAspectRatio = 1.85;
+    } else if (screenWidth > 600) {
+      crossAxisCount = 2;
+      childAspectRatio = 2.0;
+    } else {
+      crossAxisCount = 1;
+      childAspectRatio = 2.8;
+    }
+
+    return GridView.count(
+      crossAxisCount: crossAxisCount,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: spacing,
+      crossAxisSpacing: spacing,
+      childAspectRatio: childAspectRatio,
+      children: [
+        _StatCard(
+          title: 'Total Employees',
+          value: stats.totalEmployees.toString(),
+          subtitle: '${stats.activeEmployees} active',
+          icon: Icons.people_rounded,
+          color: const Color(0xFF0EA5E9),
+          trend: stats.employeeGrowth,
+          trendLabel: 'from last month',
+          priority: 'normal',
+        ),
+        _StatCard(
+          title: 'Present Today',
+          value: stats.presentToday.toString(),
+          subtitle: '${stats.avgAttendance.toStringAsFixed(1)}% attendance',
+          icon: Icons.check_circle_rounded,
+          color: const Color(0xFF10B981),
+          trend: 2.4,
+          trendLabel: 'vs yesterday',
+          priority: 'normal',
+        ),
+        _StatCard(
+          title: 'On Leave',
+          value: stats.onLeave.toString(),
+          subtitle: '${stats.pendingLeaveApprovals} pending',
+          icon: Icons.event_busy_rounded,
+          color: const Color(0xFFF59E0B),
+          priority: stats.pendingLeaveApprovals > 5 ? 'urgent' : 'warning',
+          isAlert: stats.pendingLeaveApprovals > 5,
+        ),
+        _StatCard(
+          title: 'Open Positions',
+          value: stats.openPositions.toString(),
+          subtitle: '${stats.activeRecruitment} active',
+          icon: Icons.work_outline_rounded,
+          color: const Color(0xFF8B5CF6),
+          priority: 'normal',
+        ),
+      ],
+    );
+  }
+
+  // HR Actions with equal heights
+  Widget _buildHRActionsSection(bool isDesktop, bool isWide, bool isUltraWide, bool isTablet, double spacing) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('HR Actions Required', Icons.bolt_rounded, const Color(0xFFF59E0B)),
+        SizedBox(height: spacing),
+        if (isDesktop || isWide || isUltraWide)
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Expanded(child: PendingApprovalsWidget()),
+                SizedBox(width: spacing),
+                const Expanded(child: ContractExpiryAlertsWidget()),
+                SizedBox(width: spacing),
+                const Expanded(child: PerformanceReviewDueWidget()),
+              ],
+            ),
+          )
+        else if (isTablet)
+          Column(
+            children: [
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Expanded(child: PendingApprovalsWidget()),
+                    SizedBox(width: spacing),
+                    const Expanded(child: ContractExpiryAlertsWidget()),
+                  ],
+                ),
+              ),
+              SizedBox(height: spacing),
+              const PerformanceReviewDueWidget(),
+            ],
+          )
+        else
+          Column(
+            children: [
+              const PendingApprovalsWidget(),
+              SizedBox(height: spacing),
+              const ContractExpiryAlertsWidget(),
+              SizedBox(height: spacing),
+              const PerformanceReviewDueWidget(),
+            ],
+          ),
+      ],
+    );
+  }
+
+  // Analytics Section with equal heights
+  // Employee Lifecycle Analytics - Collapsible
+  Widget _buildEmployeeLifecycleSection(bool isDesktop, bool isWide, bool isUltraWide, bool isTablet, double spacing) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Collapsible Header
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              setState(() {
+                _showEmployeeLifecycle = !_showEmployeeLifecycle;
+              });
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.people_outline_rounded, color: Color(0xFF10B981), size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Employee Lifecycle',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    _showEmployeeLifecycle ? Icons.expand_less : Icons.expand_more,
+                    color: Colors.grey[600],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        
+        if (_showEmployeeLifecycle) ...[
+          SizedBox(height: spacing),
+          // Lifecycle Row
+          if (isDesktop || isWide || isUltraWide)
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Expanded(child: NewJoinersWidget()),
+                  SizedBox(width: spacing),
+                  const Expanded(child: AttritionRateWidget()),
+                  SizedBox(width: spacing),
+                  const Expanded(child: ProbationVsConfirmedWidget()),
+                ],
+              ),
+            )
+          else
+            Column(
+              children: [
+                const NewJoinersWidget(),
+                SizedBox(height: spacing),
+                const AttritionRateWidget(),
+                SizedBox(height: spacing),
+                const ProbationVsConfirmedWidget(),
+              ],
+            ),
+        ],
+      ],
+    );
+  }
+
+  // Attendance Analytics - Collapsible
+  Widget _buildAttendanceAnalyticsSection(bool isDesktop, bool isWide, bool isUltraWide, bool isTablet, double spacing) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Collapsible Header
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              setState(() {
+                _showAttendanceAnalytics = !_showAttendanceAnalytics;
+              });
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0EA5E9).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.trending_up_rounded, color: Color(0xFF0EA5E9), size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Attendance Analytics',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    _showAttendanceAnalytics ? Icons.expand_less : Icons.expand_more,
+                    color: Colors.grey[600],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        
+        if (_showAttendanceAnalytics) ...[
+          SizedBox(height: spacing),
+          // Attendance Row
+          if (isDesktop || isWide || isUltraWide || isTablet)
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Expanded(flex: 3, child: AbsenteeismTrendChart()),
+                  SizedBox(width: spacing),
+                  const Expanded(flex: 2, child: WfhOnsiteRatioWidget()),
+                ],
+              ),
+            )
+          else
+            Column(
+              children: [
+                const AbsenteeismTrendChart(),
+                SizedBox(height: spacing),
+                const WfhOnsiteRatioWidget(),
+              ],
+            ),
+          
+          SizedBox(height: spacing),
+
+          // Charts Row
+          if (isDesktop || isWide || isUltraWide || isTablet)
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Expanded(child: DepartmentAttendanceChart()),
+                  SizedBox(width: spacing),
+                  Expanded(
+                    child: RecruitmentFunnelChart(
+                      data: [
+                        FunnelStage(stage: 'Applications', count: 450, percentage: 100),
+                        FunnelStage(stage: 'Screening', count: 180, percentage: 40),
+                        FunnelStage(stage: 'Interviews', count: 45, percentage: 10),
+                        FunnelStage(stage: 'Offers', count: 12, percentage: 2.6),
+                        FunnelStage(stage: 'Hired', count: 8, percentage: 1.7),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Column(
+              children: [
+                const DepartmentAttendanceChart(),
+                SizedBox(height: spacing),
+                RecruitmentFunnelChart(
+                  data: [
+                    FunnelStage(stage: 'Applications', count: 450, percentage: 100),
+                    FunnelStage(stage: 'Screening', count: 180, percentage: 40),
+                    FunnelStage(stage: 'Interviews', count: 45, percentage: 10),
+                    FunnelStage(stage: 'Offers', count: 12, percentage: 2.6),
+                    FunnelStage(stage: 'Hired', count: 8, percentage: 1.7),
+                  ],
+                ),
+              ],
+            ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildAnalyticsSection(bool isDesktop, bool isWide, bool isUltraWide, bool isTablet, double spacing) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('Organizational Intelligence', Icons.insights_rounded, const Color(0xFF0EA5E9)),
+        SizedBox(height: spacing),
+        
+        // Lifecycle Row
+        if (isDesktop || isWide || isUltraWide)
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Expanded(child: NewJoinersWidget()),
+                SizedBox(width: spacing),
+                const Expanded(child: AttritionRateWidget()),
+                SizedBox(width: spacing),
+                const Expanded(child: ProbationVsConfirmedWidget()),
+              ],
+            ),
+          )
+        else
+          Column(
+            children: [
+              const NewJoinersWidget(),
+              SizedBox(height: spacing),
+              const AttritionRateWidget(),
+              SizedBox(height: spacing),
+              const ProbationVsConfirmedWidget(),
+            ],
+          ),
+        
+        SizedBox(height: spacing),
+
+        // Attendance Row
+        if (isDesktop || isWide || isUltraWide || isTablet)
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Expanded(flex: 3, child: AbsenteeismTrendChart()),
+                SizedBox(width: spacing),
+                const Expanded(flex: 2, child: WfhOnsiteRatioWidget()),
+              ],
+            ),
+          )
+        else
+          Column(
+            children: [
+              const AbsenteeismTrendChart(),
+              SizedBox(height: spacing),
+              const WfhOnsiteRatioWidget(),
+            ],
+          ),
+        
+        SizedBox(height: spacing),
+
+        // Charts Row
+        if (isDesktop || isWide || isUltraWide || isTablet)
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Expanded(child: DepartmentAttendanceChart()),
+                SizedBox(width: spacing),
+                Expanded(
+                  child: RecruitmentFunnelChart(
+                    data: [
+                      FunnelStage(stage: 'Applications', count: 450, percentage: 100),
+                      FunnelStage(stage: 'Screening', count: 180, percentage: 40),
+                      FunnelStage(stage: 'Interviews', count: 45, percentage: 10),
+                      FunnelStage(stage: 'Offers', count: 12, percentage: 2.6),
+                      FunnelStage(stage: 'Hired', count: 8, percentage: 1.7),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          Column(
+            children: [
+              const DepartmentAttendanceChart(),
+              SizedBox(height: spacing),
+              RecruitmentFunnelChart(
+                data: [
+                  FunnelStage(stage: 'Applications', count: 450, percentage: 100),
+                  FunnelStage(stage: 'Screening', count: 180, percentage: 40),
+                  FunnelStage(stage: 'Interviews', count: 45, percentage: 10),
+                  FunnelStage(stage: 'Offers', count: 12, percentage: 2.6),
+                  FunnelStage(stage: 'Hired', count: 8, percentage: 1.7),
+                ],
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  // Key Metrics with equal heights
+  Widget _buildKeyMetrics(HRDashboardStats stats, bool isDesktop, bool isWide, bool isUltraWide, bool isTablet, double spacing) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('Key Performance Metrics', Icons.dashboard_rounded, const Color(0xFF8B5CF6)),
+        SizedBox(height: spacing),
+        if (isDesktop || isWide || isUltraWide)
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: _buildMetricCard('Monthly Payroll', 'PKR ${_formatCurrency(stats.monthlyPayroll)}', Icons.account_balance_wallet, const Color(0xFF8B5CF6), '${stats.activeEmployees} employees')),
+                SizedBox(width: spacing),
+                Expanded(child: _buildMetricCard('Overtime Hours', '${stats.overtimeHours} hrs', Icons.access_time_filled, const Color(0xFFF59E0B), 'This month')),
+                SizedBox(width: spacing),
+                Expanded(child: _buildMetricCard('Pending Contracts', '${stats.pendingContracts}', Icons.description, const Color(0xFFEF4444), 'Need signature')),
+                SizedBox(width: spacing),
+                Expanded(child: _buildMetricCard('Training Completed', '${stats.trainingCompleted}', Icons.school, const Color(0xFF10B981), 'This quarter')),
+              ],
+            ),
+          )
+        else
+          Column(
+            children: [
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: _buildMetricCard('Monthly Payroll', 'PKR ${_formatCurrency(stats.monthlyPayroll)}', Icons.account_balance_wallet, const Color(0xFF8B5CF6), '${stats.activeEmployees} employees')),
+                    SizedBox(width: spacing),
+                    Expanded(child: _buildMetricCard('Overtime Hours', '${stats.overtimeHours} hrs', Icons.access_time_filled, const Color(0xFFF59E0B), 'This month')),
+                  ],
+                ),
+              ),
+              SizedBox(height: spacing),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: _buildMetricCard('Pending Contracts', '${stats.pendingContracts}', Icons.description, const Color(0xFFEF4444), 'Need signature')),
+                    SizedBox(width: spacing),
+                    Expanded(child: _buildMetricCard('Training Completed', '${stats.trainingCompleted}', Icons.school, const Color(0xFF10B981), 'This quarter')),
+                  ],
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  // Bottom Section with equal heights
+  Widget _buildBottomSection(bool isDesktop, bool isWide, bool isUltraWide, bool isTablet, double spacing) {
+    if (isDesktop || isWide || isUltraWide || isTablet) {
+      return IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: _buildQuickActions()),
+            SizedBox(width: spacing),
+            Expanded(child: _buildRecentActivities()),
+          ],
+        ),
+      );
+    } else {
+      return Column(
+        children: [
+          _buildQuickActions(),
+          SizedBox(height: spacing),
+          _buildRecentActivities(),
+        ],
+      );
+    }
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon, Color color) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1E293B),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWelcomeBanner(bool isLargeScreen) {
     final now = DateTime.now();
     final hour = now.hour;
     String greeting = 'Good Morning';
+    IconData greetingIcon = Icons.wb_sunny;
+    
     if (hour >= 12 && hour < 17) {
       greeting = 'Good Afternoon';
+      greetingIcon = Icons.wb_sunny_outlined;
     } else if (hour >= 17) {
       greeting = 'Good Evening';
+      greetingIcon = Icons.nights_stay;
     }
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isLargeScreen ? 24 : 20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF6366F1),
-            Color(0xFF8B5CF6),
-            Color(0xFFEC4899),
-          ],
+          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFEC4899)],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -337,49 +1335,47 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
       ),
       child: Row(
         children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(greetingIcon, color: Colors.white, size: 28),
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '$greeting, Admin! 👋',
-                  style: const TextStyle(
-                    fontSize: 28,
+                  style: TextStyle(
+                    fontSize: isLargeScreen ? 26 : 22,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                     letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Text(
-                  'Here\'s what\'s happening with your team today.',
+                  'Here\'s your HR overview for today',
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: isLargeScreen ? 15 : 14,
                     color: Colors.white.withOpacity(0.9),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    _buildInfoChip(Icons.calendar_today, DateFormat('EEE, MMM d').format(now)),
-                    const SizedBox(width: 12),
-                    _buildInfoChip(Icons.access_time, DateFormat('hh:mm a').format(now)),
-                  ],
                 ),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(
-              Icons.emoji_emotions,
-              size: 48,
-              color: Colors.white,
-            ),
+          const SizedBox(width: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              _buildInfoChip(Icons.calendar_today, DateFormat('EEE, MMM d').format(now)),
+              _buildInfoChip(Icons.access_time, DateFormat('hh:mm a').format(now)),
+            ],
           ),
         ],
       ),
@@ -388,12 +1384,14 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
 
   Widget _buildInfoChip(IconData icon, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.3)),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: Colors.white, size: 16),
           const SizedBox(width: 6),
@@ -402,7 +1400,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
             style: const TextStyle(
               color: Colors.white,
               fontSize: 13,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -410,11 +1408,588 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
     );
   }
 
-  Widget _buildCalendarWidget() {
-    final events = ref.watch(upcomingEventsProvider);
+  Widget _buildMiniCalendarWidget() {
+    final screenWidth = MediaQuery.of(context).size.width;
     final now = DateTime.now();
+    final firstDay = DateTime(now.year, now.month, 1);
+    final lastDay = DateTime(now.year, now.month + 1, 0);
+    final daysInMonth = lastDay.day;
+    final startWeekday = firstDay.weekday;
+    final events = ref.watch(upcomingEventsProvider);
+    
+    // Calculate stats
+    int eventsThisMonth = events.where((e) {
+      return e.date.month == now.month && e.date.year == now.year;
+    }).length;
+    
+    // Hide calendar on mobile
+    if (screenWidth <= 768) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
+      constraints: const BoxConstraints(maxHeight: 380),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0EA5E9).withOpacity(0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Attractive Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Month and navigation row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          DateFormat('MMMM yyyy').format(now),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          DateFormat('EEE, MMM dd').format(now),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.white.withOpacity(0.8),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        _buildCompactNavButton(Icons.chevron_left),
+                        const SizedBox(width: 6),
+                        _buildCompactNavButton(Icons.chevron_right),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Quick stats row - responsive
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 45,
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Colors.white.withOpacity(0.2), width: 0.5),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              eventsThisMonth.toString(),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              'Events',
+                              style: TextStyle(
+                                fontSize: 8,
+                                color: Colors.white.withOpacity(0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Container(
+                        width: 45,
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Colors.white.withOpacity(0.2), width: 0.5),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${daysInMonth}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              'Days',
+                              style: TextStyle(
+                                fontSize: 8,
+                                color: Colors.white.withOpacity(0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Container(
+                        width: 50,
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Colors.white.withOpacity(0.2), width: 0.5),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${((now.day / daysInMonth) * 100).toStringAsFixed(0)}%',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              'Progress',
+                              style: TextStyle(
+                                fontSize: 8,
+                                color: Colors.white.withOpacity(0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Calendar Grid
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(16),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Weekday Headers
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+                      .map((day) => Expanded(
+                            child: Center(
+                              child: Text(
+                                day,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ),
+                          ))
+                      .toList(),
+                ),
+                const SizedBox(height: 8),
+
+                // Calendar Grid
+                ...List.generate(
+                  ((daysInMonth + startWeekday - 1) / 7).ceil(),
+                  (week) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: List.generate(
+                        7,
+                        (day) {
+                          final dayNum = week * 7 + day + 2 - startWeekday;
+                          final isToday = dayNum == now.day;
+                          final isValidDay = dayNum > 0 && dayNum <= daysInMonth;
+                          
+                          return Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 1),
+                              child: AspectRatio(
+                                aspectRatio: 1,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: isToday
+                                        ? const LinearGradient(
+                                            colors: [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
+                                          )
+                                        : null,
+                                    color: isToday ? null : (isValidDay ? Colors.grey[50] : Colors.transparent),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: !isToday && isValidDay ? Border.all(color: Colors.grey[200]!, width: 0.5) : null,
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: isValidDay ? () {} : null,
+                                      borderRadius: BorderRadius.circular(6),
+                                      child: Center(
+                                        child: Text(
+                                          isValidDay ? dayNum.toString() : '',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: isToday ? FontWeight.bold : FontWeight.w500,
+                                            color: isToday ? Colors.white : Colors.black87,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactNavButton(IconData icon) {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {},
+          borderRadius: BorderRadius.circular(8),
+          splashColor: Colors.white.withOpacity(0.2),
+          child: Icon(icon, color: Colors.white, size: 16),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactCalendar() {
+    final events = ref.watch(upcomingEventsProvider);
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFEC4899).withOpacity(0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Compact Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFEC4899), Color(0xFFF59E0B)],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.event_note, color: Colors.white, size: 18),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Upcoming Events',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      '${events.length} upcoming',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.white.withOpacity(0.8),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Events List
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(16),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: events.isEmpty
+                  ? [
+                      Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            Icon(Icons.event_available, 
+                              color: Colors.grey[300], 
+                              size: 32
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'No upcoming events',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ]
+                  : List.generate(events.length, (index) {
+                      final event = events[index];
+                      final isLast = index == events.length - 1;
+                      return Column(
+                        children: [
+                          _buildCompactEventItem(event),
+                          if (!isLast) 
+                            Divider(height: 1, color: Colors.grey[200], indent: 50, endIndent: 16),
+                        ],
+                      );
+                    }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricCard(String title, String value, IconData icon, Color color, String subtitle) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: color,
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActions() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFF59E0B), Color(0xFFEF4444)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.flash_on, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Quick Actions',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildActionButton('Add Employee', Icons.person_add_rounded, const Color(0xFF0EA5E9), () => _navigateToScreen('add_employee')),
+          const SizedBox(height: 12),
+          _buildActionButton('Generate Offer', Icons.mail_rounded, const Color(0xFFEC4899), () => _navigateToScreen('offer_letters')),
+          const SizedBox(height: 12),
+          _buildActionButton('Create Contract', Icons.description_rounded, const Color(0xFF10B981), () => _navigateToScreen('contracts')),
+          const SizedBox(height: 12),
+          _buildActionButton('Process Payroll', Icons.account_balance_wallet_rounded, const Color(0xFF8B5CF6), () => _navigateToScreen('process_payroll')),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onTap) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [color, color.withOpacity(0.7)]),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: Colors.white, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[800],
+                  ),
+                ),
+              ),
+              Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[400]),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecentActivities() {
+    final activities = ref.watch(hrRecentActivitiesProvider);
+
+    return Container(
+      constraints: const BoxConstraints(maxHeight: 500),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -436,112 +2011,380 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFEC4899), Color(0xFFF59E0B)],
+                    colors: [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
                   ),
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFEC4899).withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
-                child: const Icon(Icons.calendar_month, color: Colors.white, size: 24),
+                child: const Icon(Icons.history_rounded, color: Colors.white, size: 20),
               ),
               const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Upcoming Events',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -0.5,
-                  ),
+              const Text(
+                'Recent Activities',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
-              ),
-              TextButton(
-                onPressed: () => _navigateToScreen('calendar'),
-                child: const Text('View All'),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          ...events.map((event) => _buildEventItem(event)),
+          Expanded(
+            child: ListView.separated(
+              itemCount: activities.length,
+              separatorBuilder: (context, index) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Divider(color: Colors.grey[200], height: 1),
+              ),
+              itemBuilder: (context, index) {
+                final activity = activities[index];
+                return Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: activity.color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(activity.icon, color: activity.color, size: 18),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            activity.title,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            activity.description,
+                            style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      activity.time,
+                      style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildEventItem(CalendarEvent event) {
-    final now = DateTime.now();
-    final difference = event.date.difference(now);
-    String timeLeft;
-    
-    if (difference.inHours < 24) {
-      timeLeft = '${difference.inHours}h ${difference.inMinutes % 60}m';
-    } else {
-      timeLeft = '${difference.inDays}d';
-    }
+  // Compact version for side-by-side layout with fixed height
+  Widget _buildRecentActivitiesCompact() {
+    final activities = ref.watch(hrRecentActivitiesProvider);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      height: 380,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: event.color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: event.color.withOpacity(0.3)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 4,
-            height: 40,
-            decoration: BoxDecoration(
-              color: event.color,
-              borderRadius: BorderRadius.circular(2),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.history_rounded, color: Colors.white, size: 18),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Recent Activities',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Expanded(
+            child: ListView.separated(
+              itemCount: activities.length > 6 ? 6 : activities.length,
+              separatorBuilder: (context, index) => Divider(
+                height: 12,
+                color: Colors.grey[200],
+              ),
+              itemBuilder: (context, index) {
+                final activity = activities[index];
+                return Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: activity.color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(activity.icon, color: activity.color, size: 18),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            activity.title,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            activity.description,
+                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+    );
+  }
+
+  // Compact version for side-by-side layout (no constraints)
+  Widget _buildAttractiveUpcomingEventsCompact(double spacing) {
+    final events = ref.watch(upcomingEventsProvider);
+
+    return Container(
+      height: 380,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFEC4899).withOpacity(0.3), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFEC4899).withOpacity(0.15),
+            blurRadius: 30,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Attractive Header
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFEC4899), Color(0xFFF59E0B)],
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
               children: [
-                Text(
-                  event.title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
                   ),
+                  child: const Icon(Icons.event_note, color: Colors.white, size: 18),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  DateFormat('MMM d, h:mm a').format(event.date),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Upcoming Events',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        '${events.length} events',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.white.withOpacity(0.85),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: event.color,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              timeLeft,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+          const SizedBox(height: 16),
+
+          // Events List
+          if (events.isEmpty)
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.event_available, 
+                      color: Colors.grey[300], 
+                      size: 40
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'No upcoming events',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Expanded(
+              child: ListView.separated(
+                itemCount: events.length,
+                separatorBuilder: (context, index) => Divider(
+                  height: 12,
+                  color: Colors.grey[200],
+                ),
+                itemBuilder: (context, index) {
+                  final event = events[index];
+                  return _buildCompactEventItem(event);
+                },
               ),
             ),
-          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCompactEventItem(CalendarEvent event) {
+    final now = DateTime.now();
+    final difference = event.date.difference(now);
+    final hours = difference.inHours;
+    final days = difference.inDays;
+    
+    String timeText;
+    Color timeColor;
+    
+    if (hours < 0) {
+      timeText = 'Past';
+      timeColor = Colors.grey;
+    } else if (hours <= 2) {
+      timeText = 'Soon';
+      timeColor = Colors.red;
+    } else if (hours < 24) {
+      timeText = 'Today';
+      timeColor = Colors.orange;
+    } else {
+      timeText = '${days}d';
+      timeColor = Colors.blue;
+    }
+
+    return Row(
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [event.color, event.color.withOpacity(0.6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(event.icon, color: Colors.white, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                event.title,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                DateFormat('MMM dd, hh:mm a').format(event.date),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: timeColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: timeColor.withOpacity(0.3), width: 0.5),
+          ),
+          child: Text(
+            timeText,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: timeColor,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 
@@ -561,18 +2404,13 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
         children: [
-          _buildStatusItem(Icons.cloud_done, 'System Online', const Color(0xFF10B981)),
+          _buildStatusItem(Icons.cloud_done, 'Online', const Color(0xFF10B981)),
           const SizedBox(width: 24),
-          _buildStatusItem(Icons.people, '238 Active Users', const Color(0xFF0EA5E9)),
+          _buildStatusItem(Icons.people, '238 Users', const Color(0xFF0EA5E9)),
           const Spacer(),
           Text(
-            'Last Updated: ${DateFormat('hh:mm a').format(DateTime.now())}',
+            'Updated: ${DateFormat('hh:mm a').format(DateTime.now())}',
             style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-          ),
-          const SizedBox(width: 16),
-          Text(
-            '© ${DateTime.now().year} CyberZeus HR',
-            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
           ),
         ],
       ),
@@ -596,6 +2434,116 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
     );
   }
 
+  Widget _buildAppBar(BuildContext context, bool isMobile) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > 768 && screenWidth <= 1200;
+    final isCompactDesktop = screenWidth > 1200 && screenWidth <= 1400;
+    
+    // Responsive sizing
+    final logoSize = isMobile ? 0.0 : (isTablet ? 32.0 : 40.0);
+    final titleFontSize = isMobile ? 14.0 : (isTablet ? 16.0 : (isCompactDesktop ? 18.0 : 20.0));
+    final iconSize = isMobile ? 20.0 : 22.0;
+    final horizontalPadding = isMobile ? 12.0 : isTablet ? 14.0 : 16.0;
+
+    return Container(
+      height: 70,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1E3A8A), Color(0xFF0EA5E9), Color(0xFF06B6D4)],
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+          child: Row(
+            children: [
+              // Menu button or logo
+              if (isMobile)
+                SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(Icons.menu, color: Colors.white, size: 24),
+                    onPressed: () {
+                      try {
+                        Scaffold.of(context).openDrawer();
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Menu unavailable'), duration: Duration(seconds: 1)),
+                        );
+                      }
+                    },
+                  ),
+                )
+              else if (logoSize > 0)
+                SizedBox(
+                  width: logoSize,
+                  height: logoSize,
+                  child: Image.asset(
+                    'assets/images/CyberZeus Logo Final.png',
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              
+              // Title
+              SizedBox(width: isMobile ? 8 : 12),
+              Expanded(
+                child: Text(
+                  isMobile ? 'HR System' : 'HR Management System',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: titleFontSize,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              
+              // Action icons
+              if (!isMobile) ...[
+                SizedBox(width: isTablet ? 6 : 8),
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Badge(
+                      label: const Text('8', style: TextStyle(fontSize: 9)),
+                      backgroundColor: const Color(0xFFEF4444),
+                      child: Icon(Icons.notifications_outlined, color: Colors.white, size: iconSize),
+                    ),
+                  ),
+                ),
+                SizedBox(width: isTablet ? 6 : 8),
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.settings_outlined, color: Colors.white, size: iconSize),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // SIDEBAR WITH COMPREHENSIVE MENU
   Widget _buildSidebar(BuildContext context) {
     final selectedMenu = ref.watch(selectedMenuProvider);
     final expandedMenus = ref.watch(expandedMenuProvider);
@@ -606,10 +2554,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF1E293B),
-            Color(0xFF0F172A),
-          ],
+          colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
         ),
         boxShadow: [
           BoxShadow(
@@ -621,13 +2566,12 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
       ),
       child: Column(
         children: [
-          // Logo Section
           Container(
             padding: const EdgeInsets.all(24),
             child: Column(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
@@ -641,10 +2585,11 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.people_rounded,
-                    color: Colors.white,
-                    size: 32,
+                  child: Image.asset(
+                    'assets/images/CyberZeus Logo Final.png',
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.contain,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -663,7 +2608,6 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
           ),
           const Divider(color: Colors.white12, height: 1, thickness: 1),
           
-          // Navigation Menu
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -733,6 +2677,67 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                     icon: Icons.assessment,
                     label: 'Interview Feedback',
                     onTap: () => _navigateToScreen('interview_feedback'),
+                  ),
+                ],
+                
+                _buildSidebarItem(
+                  icon: Icons.group_add_rounded,
+                  label: 'New Joinings',
+                  isActive: selectedMenu == 'new_joinings',
+                  hasSubmenu: true,
+                  isExpanded: expandedMenus.contains('new_joinings'),
+                  onTap: () => _toggleMenu('new_joinings'),
+                ),
+                if (expandedMenus.contains('new_joinings')) ...[
+                  _buildSidebarSubItem(
+                    icon: Icons.person_add_alt_rounded,
+                    label: 'Shortlisted Candidates',
+                    onTap: () => _navigateToScreen('shortlisted_candidates'),
+                  ),
+                  _buildSidebarSubItem(
+                    icon: Icons.mail_outline_rounded,
+                    label: 'Offer Letter Creation',
+                    onTap: () => _navigateToScreen('offer_letter_creation'),
+                  ),
+                  _buildSidebarSubItem(
+                    icon: Icons.check_circle_outline_rounded,
+                    label: 'Offer Acceptance',
+                    onTap: () => _navigateToScreen('offer_acceptance'),
+                  ),
+                  _buildSidebarSubItem(
+                    icon: Icons.description_rounded,
+                    label: 'Create Contract',
+                    onTap: () => _navigateToScreen('create_contract'),
+                  ),
+                  _buildSidebarSubItem(
+                    icon: Icons.calendar_today_rounded,
+                    label: 'Probation Period',
+                    onTap: () => _navigateToScreen('probation_period'),
+                  ),
+                  _buildSidebarSubItem(
+                    icon: Icons.checklist_rounded,
+                    label: 'Onboarding Checklist',
+                    onTap: () => _navigateToScreen('onboarding_checklist'),
+                  ),
+                  _buildSidebarSubItem(
+                    icon: Icons.school_rounded,
+                    label: 'Training Programs',
+                    onTap: () => _navigateToScreen('training_programs'),
+                  ),
+                  _buildSidebarSubItem(
+                    icon: Icons.business_center_rounded,
+                    label: 'Asset Allocation',
+                    onTap: () => _navigateToScreen('asset_allocation'),
+                  ),
+                  _buildSidebarSubItem(
+                    icon: Icons.assignment_rounded,
+                    label: 'Joining Documents',
+                    onTap: () => _navigateToScreen('joining_documents'),
+                  ),
+                  _buildSidebarSubItem(
+                    icon: Icons.how_to_reg_rounded,
+                    label: 'Confirm Joining',
+                    onTap: () => _navigateToScreen('confirm_joining'),
                   ),
                 ],
                 
@@ -1029,106 +3034,6 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
     );
   }
 
-  Widget _buildSidebarQuickAction({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.white.withOpacity(0.2)),
-            ),
-            child: Row(
-              children: [
-                Icon(icon, color: const Color(0xFF0EA5E9), size: 18),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 12),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSidebarAlert({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required String count,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: color.withOpacity(0.3)),
-            ),
-            child: Row(
-              children: [
-                Icon(icon, color: color, size: 18),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    count,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildSidebarCategory(String label) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
@@ -1233,1304 +3138,25 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
     );
   }
 
-  Widget _buildAppBar(BuildContext context, bool isMobile) {
-    return Container(
-      height: 140,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1E3A8A),
-            Color(0xFF0EA5E9),
-            Color(0xFF06B6D4),
-          ],
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    Colors.white.withOpacity(0.1),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  if (isMobile)
-                    IconButton(
-                      icon: const Icon(Icons.menu, color: Colors.white, size: 24),
-                      onPressed: () => Scaffold.of(context).openDrawer(),
-                    ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Admin Dashboard',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: isMobile ? 11 : 13,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'HR Management System',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: isMobile ? 16 : 24,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (!isMobile) ...[
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Badge(
-                        label: const Text('8', style: TextStyle(fontSize: 10)),
-                        backgroundColor: const Color(0xFFEF4444),
-                        child: Icon(Icons.notifications_outlined,
-                            color: Colors.white, size: isMobile ? 18 : 22),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(Icons.settings_outlined,
-                          color: Colors.white, size: isMobile ? 18 : 22),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickStats(HRDashboardStats stats, bool isDesktop, bool isTablet, bool isMobile) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        int crossAxisCount;
-        if (constraints.maxWidth >= 1400) {
-          crossAxisCount = 4;
-        } else if (constraints.maxWidth >= 1000) {
-          crossAxisCount = 3;
-        } else if (constraints.maxWidth >= 600) {
-          crossAxisCount = 2;
-        } else {
-          crossAxisCount = 1;
-        }
-
-        return GridView.count(
-          crossAxisCount: crossAxisCount,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
-          childAspectRatio: 1.4,
-          children: [
-            _StatCard(
-              title: 'Total Employees',
-              value: stats.totalEmployees.toString(),
-              subtitle: '${stats.activeEmployees} active',
-              icon: Icons.people_rounded,
-              color: const Color(0xFF0EA5E9),
-              progress: stats.activeEmployees / stats.totalEmployees,
-              trend: stats.employeeGrowth,
-              trendLabel: 'from last month',
-            ),
-            _StatCard(
-              title: 'Present Today',
-              value: stats.presentToday.toString(),
-              subtitle: '${stats.avgAttendance.toStringAsFixed(1)}% attendance',
-              icon: Icons.check_circle_rounded,
-              color: const Color(0xFF10B981),
-              progress: stats.presentToday / stats.activeEmployees,
-              trend: 2.4,
-              trendLabel: 'vs yesterday',
-            ),
-            _StatCard(
-              title: 'On Leave',
-              value: stats.onLeave.toString(),
-              subtitle: '${stats.pendingLeaveApprovals} pending',
-              icon: Icons.event_busy_rounded,
-              color: const Color(0xFFF59E0B),
-              progress: stats.onLeave / stats.activeEmployees,
-              isAlert: stats.pendingLeaveApprovals > 5,
-            ),
-            _StatCard(
-              title: 'Open Positions',
-              value: stats.openPositions.toString(),
-              subtitle: '${stats.activeRecruitment} active',
-              icon: Icons.work_outline_rounded,
-              color: const Color(0xFF8B5CF6),
-              progress: stats.activeRecruitment / (stats.openPositions + stats.activeRecruitment),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildHRModulesGrid(HRDashboardStats stats, bool isDesktop, bool isMobile) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Module Tabs
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[200]!, width: 1),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: TabBar(
-              controller: _tabController,
-              tabs: const [
-                Tab(text: '🎯 Core HR'),
-                Tab(text: '⭐ Talent'),
-                Tab(text: '💰 Finance'),
-                Tab(text: '📊 Reports'),
-              ],
-              indicatorColor: const Color(0xFF0EA5E9),
-              labelColor: const Color(0xFF0EA5E9),
-              unselectedLabelColor: Colors.grey[600],
-              labelStyle: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
-
-        // Tab Content
-        SizedBox(
-          height: 480,
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              // Core HR Tab
-              _buildResponsiveModuleGrid(
-                stats,
-                isDesktop,
-                isMobile,
-                [
-                  _buildModuleCard('Employees', 238, 245, Icons.people_outline, const Color(0xFF0EA5E9), 'Active employees', () => _navigateToScreen('employee')),
-                  _buildModuleCard('Onboarding', stats.onboardingInProgress, stats.onboardingInProgress + 2, Icons.person_add_outlined, const Color(0xFFF59E0B), 'In progress', () => _navigateToScreen('onboarding')),
-                  _buildModuleCard('Resignations', stats.pendingResignations, stats.pendingResignations + 3, Icons.exit_to_app, const Color(0xFFEF4444), 'Pending exit', () => _navigateToScreen('resignation')),
-                  _buildModuleCard('Attendance', stats.presentToday, stats.activeEmployees, Icons.access_time, const Color(0xFF8B5CF6), 'Present today', () => _navigateToScreen('attendance')),
-                  _buildModuleCard('Leave Balance', 28, 45, Icons.event_available, const Color(0xFF06B6D4), 'Days available', () => _navigateToScreen('leave_balance')),
-                  _buildModuleCard('Leave Requests', stats.pendingLeaveApprovals, stats.pendingLeaveApprovals + 12, Icons.approval, const Color(0xFF10B981), 'Pending approvals', () => _navigateToScreen('leave')),
-                  _buildModuleCard('Documents', 220, 245, Icons.description_outlined, const Color(0xFF10B981), 'Uploaded & verified', () => _navigateToScreen('documents')),
-                  _buildModuleCard('Asset Assignment', 238, 245, Icons.laptop_chromebook_outlined, const Color(0xFF059669), 'Assigned', () => _navigateToScreen('asset_assignment')),
-                ],
-              ),
-              // Talent Tab
-              _buildResponsiveModuleGrid(
-                stats,
-                isDesktop,
-                isMobile,
-                [
-                  _buildModuleCard('Recruitment', stats.activeRecruitment, stats.openPositions + stats.activeRecruitment, Icons.work_outline, const Color(0xFF0EA5E9), 'Active postings', () => _navigateToScreen('recruitment')),
-                  _buildModuleCard('Job Positions', stats.openPositions, 10, Icons.work, const Color(0xFF8B5CF6), 'Open positions', () => _navigateToScreen('job_positions')),
-                  _buildModuleCard('Candidates', 45, 120, Icons.person_search_outlined, const Color(0xFFEC4899), 'In pipeline', () => _navigateToScreen('candidates')),
-                  _buildModuleCard('Interviews', stats.interviewsScheduled, 35, Icons.calendar_month_outlined, const Color(0xFFF59E0B), 'Scheduled', () => _navigateToScreen('interviews')),
-                  _buildModuleCard('Performance Review', 18, 45, Icons.assessment_outlined, const Color(0xFF10B981), 'Completed', () => _navigateToScreen('performance')),
-                  _buildModuleCard('Appraisals', stats.performanceReviewsDue, stats.activeEmployees, Icons.star_outline, const Color(0xFFF59E0B), 'Due this month', () => _navigateToScreen('appraisal')),
-                  _buildModuleCard('Training', stats.trainingCompleted, 120, Icons.school_outlined, const Color(0xFF0EA5E9), 'Completed', () => _navigateToScreen('training')),
-                  _buildModuleCard('Goals', 120, 245, Icons.flag_outlined, const Color(0xFF0EA5E9), 'Active goals', () => _navigateToScreen('goals')),
-                ],
-              ),
-              // Finance Tab
-              _buildResponsiveModuleGrid(
-                stats,
-                isDesktop,
-                isMobile,
-                [
-                  _buildModuleCard('Payroll Run', 245, 245, Icons.account_balance_wallet_rounded, const Color(0xFF059669), 'Monthly processed', () => _navigateToScreen('payroll')),
-                  _buildModuleCard('Payslips', 238, 245, Icons.receipt_long_outlined, const Color(0xFFDC2626), 'Generated & sent', () => _navigateToScreen('payslips')),
-                  _buildModuleCard('Tax Deduction', 245, 245, Icons.calculate_outlined, const Color(0xFF7C3AED), 'Applied to salary', () => _navigateToScreen('tax')),
-                  _buildModuleCard('Allowances', 235, 245, Icons.card_giftcard_outlined, const Color(0xFFF59E0B), 'Configured', () => _navigateToScreen('allowances')),
-                  _buildModuleCard('Contracts', stats.activeEmployees - stats.pendingContracts, stats.activeEmployees, Icons.handshake_outlined, const Color(0xFF06B6D4), 'Need signature', () => _navigateToScreen('contracts')),
-                  _buildModuleCard('Offer Letters', stats.pendingOfferLetters, stats.pendingOfferLetters + 7, Icons.mail_outline, const Color(0xFFEC4899), 'Pending approval', () => _navigateToScreen('offer_letters')),
-                  _buildModuleCard('Probation', 12, 15, Icons.timer_outlined, const Color(0xFF8B5CF6), 'Under review', () => _navigateToScreen('probation')),
-                  _buildModuleCard('Inventory', 240, 250, Icons.inventory_2_outlined, const Color(0xFF8B5CF6), 'Total assets', () => _navigateToScreen('inventory')),
-                ],
-              ),
-              // Reports Tab
-              _buildResponsiveModuleGrid(
-                stats,
-                isDesktop,
-                isMobile,
-                [
-                  _buildModuleCard('Attendance Report', 94, 100, Icons.bar_chart_outlined, const Color(0xFF10B981), 'Monthly report', () => _navigateToScreen('attendance_report')),
-                  _buildModuleCard('Leave Report', 28, 100, Icons.show_chart, const Color(0xFFF59E0B), 'Summary data', () => _navigateToScreen('leave_report')),
-                  _buildModuleCard('Payroll Report', 245, 245, Icons.receipt_outlined, const Color(0xFF0EA5E9), 'Monthly summary', () => _navigateToScreen('payroll_report')),
-                  _buildModuleCard('Export Data', 50, 100, Icons.download_outlined, const Color(0xFF06B6D4), 'CSV exports', () => _navigateToScreen('export')),
-                  _buildModuleCard('Announcements', 8, 12, Icons.campaign_outlined, const Color(0xFF059669), 'This month', () => _navigateToScreen('announcements')),
-                  _buildModuleCard('HR Notices', 12, 25, Icons.notifications_active_outlined, const Color(0xFFEC4899), 'Active notices', () => _navigateToScreen('notices')),
-                  _buildModuleCard('Communications', 45, 60, Icons.mail_outline, const Color(0xFF8B5CF6), 'Total sent', () => _navigateToScreen('communications')),
-                  _buildModuleCard('Clearance', 2, 2, Icons.verified_outlined, const Color(0xFF10B981), 'Pending exit', () => _navigateToScreen('clearance')),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildResponsiveModuleGrid(
-    HRDashboardStats stats,
-    bool isDesktop,
-    bool isMobile,
-    List<Widget> cards,
-  ) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Determine grid columns based on available width
-        int crossAxisCount;
-        if (constraints.maxWidth >= 1600) {
-          crossAxisCount = 4;
-        } else if (constraints.maxWidth >= 1200) {
-          crossAxisCount = 3;
-        } else if (constraints.maxWidth >= 800) {
-          crossAxisCount = 2;
-        } else {
-          crossAxisCount = 1;
-        }
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: GridView.count(
-            crossAxisCount: crossAxisCount,
-            childAspectRatio: 1.2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            physics: const NeverScrollableScrollPhysics(),
-            children: cards,
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildModuleCard(
-    String title,
-    int completed,
-    int total,
-    IconData icon,
-    Color color,
-    String subtitle,
-    VoidCallback onTap,
-  ) {
-    final progress = total > 0 ? completed / total : 0.0;
-    final percentage = (progress * 100).toStringAsFixed(0);
-
-    return SizedBox(
-      height: 160,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: color.withOpacity(0.2), width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 12,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [color, color.withOpacity(0.7)],
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: color.withOpacity(0.3),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Icon(icon, color: Colors.white, size: 18),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '$percentage%',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: color,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const Spacer(flex: 1),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          completed.toString(),
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: color,
-                            height: 1,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Text(
-                            '/ $total',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[500],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-                const Spacer(flex: 1),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    backgroundColor: Colors.grey[200],
-                    valueColor: AlwaysStoppedAnimation<Color>(color),
-                    minHeight: 6,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Completed',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey[600],
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        'Remaining: ${total - completed}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w600,
-                        ),
-                        textAlign: TextAlign.right,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAttendanceChart() {
-    final attendanceData = ref.watch(hrAttendanceTrendProvider);
-
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF10B981), Color(0xFF059669)],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF10B981).withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.analytics, color: Colors.white, size: 24),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Attendance Trends',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Last 7 days performance',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Wrap(
-                spacing: 16,
-                children: [
-                  _buildLegendItem('Present', const Color(0xFF10B981)),
-                  _buildLegendItem('Late', const Color(0xFFF59E0B)),
-                  _buildLegendItem('Total', const Color(0xFF0EA5E9)),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          SizedBox(
-            height: 280,
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: 50,
-                  getDrawingHorizontalLine: (value) {
-                    return FlLine(color: Colors.grey[200]!, strokeWidth: 1);
-                  },
-                ),
-                titlesData: FlTitlesData(
-                  show: true,
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        if (value.toInt() >= attendanceData.length) {
-                          return const SizedBox.shrink();
-                        }
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            attendanceData[value.toInt()].day,
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 40,
-                      getTitlesWidget: (value, meta) => Text(
-                        value.toInt().toString(),
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                ),
-                borderData: FlBorderData(show: false),
-                minX: 0,
-                maxX: (attendanceData.length - 1).toDouble(),
-                minY: 0,
-                maxY: 220,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: attendanceData
-                        .asMap()
-                        .entries
-                        .map((e) => FlSpot(
-                            e.key.toDouble(), e.value.total.toDouble()))
-                        .toList(),
-                    isCurved: true,
-                    color: const Color(0xFF0EA5E9),
-                    barWidth: 3,
-                    dotData: const FlDotData(show: true),
-                  ),
-                  LineChartBarData(
-                    spots: attendanceData
-                        .asMap()
-                        .entries
-                        .map((e) => FlSpot(
-                            e.key.toDouble(), e.value.present.toDouble()))
-                        .toList(),
-                    isCurved: true,
-                    color: const Color(0xFF10B981),
-                    barWidth: 3,
-                    dotData: const FlDotData(show: true),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: const Color(0xFF10B981).withOpacity(0.1),
-                    ),
-                  ),
-                  LineChartBarData(
-                    spots: attendanceData
-                        .asMap()
-                        .entries
-                        .map((e) =>
-                            FlSpot(e.key.toDouble(), e.value.late.toDouble()))
-                        .toList(),
-                    isCurved: true,
-                    color: const Color(0xFFF59E0B),
-                    barWidth: 3,
-                    dotData: const FlDotData(show: true),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDepartmentDistribution() {
-    final deptData = ref.watch(hrDepartmentDistributionProvider);
-    final total = deptData.fold(0, (sum, item) => sum + item.count);
-
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF8B5CF6).withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Icon(Icons.pie_chart_rounded, color: Colors.white, size: 24),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                'Employee Distribution',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -0.5,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isSmall = constraints.maxWidth < 400;
-              return isSmall
-                  ? Column(
-                      children: [
-                        SizedBox(
-                          width: 200,
-                          height: 200,
-                          child: PieChart(
-                            PieChartData(
-                              sectionsSpace: 2,
-                              centerSpaceRadius: 60,
-                              sections: deptData.map((dept) {
-                                final percentage = (dept.count / total) * 100;
-                                return PieChartSectionData(
-                                  color: dept.color,
-                                  value: dept.count.toDouble(),
-                                  title: '${percentage.toStringAsFixed(0)}%',
-                                  radius: 55,
-                                  titleStyle: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: deptData.map((dept) {
-                              final percentage = (dept.count / total) * 100;
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Container(
-                                          width: 14,
-                                          height: 14,
-                                          decoration: BoxDecoration(
-                                            color: dept.color,
-                                            borderRadius: BorderRadius.circular(3),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Text(
-                                            dept.name,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          dept.count.toString(),
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: dept.color,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(4),
-                                      child: LinearProgressIndicator(
-                                        value: dept.count / total,
-                                        backgroundColor: Colors.grey[200],
-                                        valueColor: AlwaysStoppedAnimation<Color>(dept.color),
-                                        minHeight: 6,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ],
-                    )
-                  : Row(
-                      children: [
-                        SizedBox(
-                          width: 200,
-                          height: 200,
-                          child: PieChart(
-                            PieChartData(
-                              sectionsSpace: 2,
-                              centerSpaceRadius: 60,
-                              sections: deptData.map((dept) {
-                                final percentage = (dept.count / total) * 100;
-                                return PieChartSectionData(
-                                  color: dept.color,
-                                  value: dept.count.toDouble(),
-                                  title: '${percentage.toStringAsFixed(0)}%',
-                                  radius: 55,
-                                  titleStyle: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 32),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: deptData.map((dept) {
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Container(
-                                          width: 14,
-                                          height: 14,
-                                          decoration: BoxDecoration(
-                                            color: dept.color,
-                                            borderRadius: BorderRadius.circular(3),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Text(
-                                            dept.name,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          dept.count.toString(),
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: dept.color,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(4),
-                                      child: LinearProgressIndicator(
-                                        value: dept.count / total,
-                                        backgroundColor: Colors.grey[200],
-                                        valueColor: AlwaysStoppedAnimation<Color>(dept.color),
-                                        minHeight: 6,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ],
-                    );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickActions() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFF59E0B), Color(0xFFEF4444)],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFF59E0B).withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Icon(Icons.flash_on, color: Colors.white, size: 24),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                'Quick Actions',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -0.5,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _buildActionButton(
-            'Add Employee',
-            Icons.person_add_rounded,
-            const Color(0xFF0EA5E9),
-            () => _navigateToScreen('add_employee'),
-          ),
-          const SizedBox(height: 12),
-          _buildActionButton(
-            'Generate Offer Letter',
-            Icons.mail_rounded,
-            const Color(0xFFEC4899),
-            () => _navigateToScreen('offer_letters'),
-          ),
-          const SizedBox(height: 12),
-          _buildActionButton(
-            'Create Contract',
-            Icons.description_rounded,
-            const Color(0xFF10B981),
-            () => _navigateToScreen('contracts'),
-          ),
-          const SizedBox(height: 12),
-          _buildActionButton(
-            'Process Payroll',
-            Icons.account_balance_wallet_rounded,
-            const Color(0xFF8B5CF6),
-            () => _navigateToScreen('process_payroll'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton(
-      String label, IconData icon, Color color, VoidCallback onTap) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withOpacity(0.3), width: 1.5),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [color, color.withOpacity(0.7)],
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Icon(icon, color: Colors.white, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
-                  ),
-                ),
-              ),
-              Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecentActivities() {
-    final activities = ref.watch(hrRecentActivitiesProvider);
-
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF0EA5E9).withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.history_rounded, color: Colors.white, size: 24),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Recent Activities',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ],
-              ),
-              TextButton(
-                onPressed: () => _navigateToScreen('activities'),
-                child: const Text('View All'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          ...activities.map((activity) => Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: _buildActivityItem(activity),
-              )),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActivityItem(ActivityItem activity) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: activity.color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(activity.icon, color: activity.color, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                activity.title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                activity.description,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[600],
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                activity.time,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[500],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPayrollSummary(HRDashboardStats stats) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF8B5CF6), Color(0xFF6366F1), Color(0xFF4F46E5)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF8B5CF6).withOpacity(0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.account_balance_wallet, color: Colors.white, size: 28),
-              SizedBox(width: 12),
-              Text(
-                'Payroll Summary',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _buildPayrollItem(
-            'Monthly Payroll',
-            'PKR ${_formatCurrency(stats.monthlyPayroll)}',
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: 0.75,
-              backgroundColor: Colors.white.withOpacity(0.2),
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-              minHeight: 6,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildPayrollItem(
-            'Overtime Hours',
-            '${stats.overtimeHours} hrs',
-          ),
-          const SizedBox(height: 16),
-          _buildPayrollItem(
-            'Tax Deducted',
-            'PKR ${_formatCurrency(stats.monthlyPayroll * 0.15)}',
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => _navigateToScreen('process_payroll'),
-              icon: const Icon(Icons.play_arrow),
-              label: const Text(
-                'Process Payroll',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF8B5CF6),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPayrollItem(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.white.withOpacity(0.9),
-          ),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLegendItem(String label, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.grey[700],
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-
   String _formatCurrency(double amount) {
-    if (amount >= 10000000) {
-      return '${(amount / 10000000).toStringAsFixed(1)}Cr';
-    }
+    if (amount >= 10000000) return '${(amount / 10000000).toStringAsFixed(1)}Cr';
     if (amount >= 100000) return '${(amount / 100000).toStringAsFixed(1)}L';
     if (amount >= 1000) return '${(amount / 1000).toStringAsFixed(0)}K';
     return amount.toStringAsFixed(0);
   }
 }
 
-// Stat Card Widget with Progress Bar
+// Stat Card Widget
 class _StatCard extends StatelessWidget {
   final String title;
   final String value;
   final String subtitle;
   final IconData icon;
   final Color color;
-  final double? progress;
   final double? trend;
   final String? trendLabel;
   final bool isAlert;
+  final String priority; // 'normal', 'warning', 'urgent'
 
   const _StatCard({
     required this.title,
@@ -2538,182 +3164,149 @@ class _StatCard extends StatelessWidget {
     required this.subtitle,
     required this.icon,
     required this.color,
-    this.progress,
     this.trend,
     this.trendLabel,
     this.isAlert = false,
+    this.priority = 'normal',
   });
+
+  Color _getPriorityColor() {
+    switch (priority) {
+      case 'urgent':
+        return const Color(0xFFEF4444);
+      case 'warning':
+        return const Color(0xFFF59E0B);
+      default:
+        return const Color(0xFF10B981);
+    }
+  }
+
+  String _getPriorityLabel() {
+    switch (priority) {
+      case 'urgent':
+        return 'Urgent';
+      case 'warning':
+        return 'Alert';
+      default:
+        return 'Normal';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 160,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [color, color.withOpacity(0.7)],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Icon(icon, color: Colors.white, size: 24),
+    final priorityColor = _getPriorityColor();
+    final priorityLabel = _getPriorityLabel();
+    
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: priority != 'normal' ? Border.all(color: priorityColor.withOpacity(0.3), width: 1.5) : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [color, color.withOpacity(0.7)]),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                if (isAlert)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.priority_high,
-                            color: Color(0xFFF59E0B), size: 14),
-                        SizedBox(width: 4),
-                        Text(
-                          'Alert',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFF59E0B),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
+                child: Icon(icon, color: Colors.white, size: 16),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -1,
-                height: 1,
-              ),
-            ),
-            const SizedBox(height: 12),
-            if (trend != null)
-              Row(
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: trend! >= 0
-                          ? const Color(0xFF10B981).withOpacity(0.1)
-                          : const Color(0xFFEF4444).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          trend! >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
-                          size: 12,
-                          color: trend! >= 0
-                              ? const Color(0xFF10B981)
-                              : const Color(0xFFEF4444),
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          '${trend!.abs().toStringAsFixed(1)}%',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: trend! >= 0
-                                ? const Color(0xFF10B981)
-                                : const Color(0xFFEF4444),
-                          ),
-                        ),
-                      ],
-                    ),
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: priorityColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(5),
+                    border: Border.all(color: priorityColor.withOpacity(0.5), width: 1),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      trendLabel ?? '',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      overflow: TextOverflow.ellipsis,
+                  child: Text(
+                    priorityLabel,
+                    style: TextStyle(
+                      fontSize: 7,
+                      fontWeight: FontWeight.bold,
+                      color: priorityColor,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-              )
-            else
-              Text(
-                subtitle,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                overflow: TextOverflow.ellipsis,
-              ),
-            if (progress != null) ...[
-              const SizedBox(height: 12),
-              Column(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      backgroundColor: Colors.grey[200],
-                      valueColor: AlwaysStoppedAnimation<Color>(color),
-                      minHeight: 6,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${(progress! * 100).toStringAsFixed(0)}% Complete',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ],
-          ],
-        ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.3,
+              height: 1,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 3),
+          if (trend != null)
+            Flexible(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      trend! > 0 ? Icons.trending_up : Icons.trending_down,
+                      color: trend! > 0 ? Colors.green : Colors.red,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      '${trend!.abs()}% ${trendLabel ?? ''}',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: trend! > 0 ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Text(
+              subtitle,
+              style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+        ],
       ),
     );
   }
@@ -2809,6 +3402,7 @@ class CalendarEvent {
   final String title;
   final DateTime date;
   final Color color;
+  final IconData icon;
 
-  CalendarEvent(this.title, this.date, this.color);
+  CalendarEvent(this.title, this.date, this.color, this.icon);
 }

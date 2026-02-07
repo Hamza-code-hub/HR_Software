@@ -22,6 +22,15 @@ func main() {
 	cfg := config.Load()
 	ctx := context.Background()
 
+	// Ensure database exists and run migrations (migrations dir configurable via MIGRATIONS_DIR)
+	migrationsDir := os.Getenv("MIGRATIONS_DIR")
+	if migrationsDir == "" {
+		migrationsDir = "migrations"
+	}
+	if err := db.EnsureDBAndMigrate(ctx, cfg.Database.URL, migrationsDir); err != nil {
+		log.Fatalf("migrations: %v", err)
+	}
+
 	pool, err := db.NewPool(ctx, cfg.Database.URL)
 	if err != nil {
 		log.Fatalf("database: %v", err)
@@ -49,6 +58,7 @@ func main() {
 	payrollHandler := handler.NewPayrollHandler(pool)
 	accountingHandler := handler.NewAccountingHandler(pool)
 	reportsHandler := handler.NewReportsHandler(pool)
+	analyticsHandler := handler.NewAnalyticsHandler()
 
 	app.Post("/auth/signup", authHandler.Signup)
 	app.Post("/auth/login", authHandler.Login)
@@ -80,6 +90,24 @@ func main() {
 	api.Post("/accounts", accountingHandler.CreateAccount)
 	api.Get("/journals", accountingHandler.ListJournals)
 	api.Post("/journals", accountingHandler.CreateJournal)
+
+	// Analytics Routes
+	// HR Analytics
+	api.Get("/analytics/hr/dashboard-stats", analyticsHandler.GetHRDashboardStats)
+	api.Get("/analytics/hr/payroll-trend", analyticsHandler.GetPayrollTrend)
+	api.Get("/analytics/hr/turnover-analysis", analyticsHandler.GetTurnoverAnalysis)
+	api.Get("/analytics/hr/recruitment-funnel", analyticsHandler.GetRecruitmentFunnel)
+	api.Get("/analytics/hr/leave-balance", analyticsHandler.GetLeaveBalance)
+	api.Get("/analytics/hr/attendance-heatmap", analyticsHandler.GetAttendanceHeatmap)
+	
+	// Accounting Analytics
+	api.Get("/analytics/accounting/dashboard-stats", analyticsHandler.GetAccountingDashboardStats)
+	api.Get("/analytics/accounting/revenue-expenses", analyticsHandler.GetRevenueExpenses)
+	api.Get("/analytics/accounting/cash-flow", analyticsHandler.GetCashFlow)
+	api.Get("/analytics/accounting/aging-analysis", analyticsHandler.GetAgingAnalysis)
+	api.Get("/analytics/accounting/expense-breakdown", analyticsHandler.GetExpenseBreakdown)
+	api.Get("/analytics/accounting/budget-vs-actual", analyticsHandler.GetBudgetVsActual)
+	api.Get("/analytics/accounting/profit-loss", analyticsHandler.GetProfitLoss)
 
 	api.Get("/reports/employees/csv", reportsHandler.EmployeesCSV)
 	api.Get("/reports/attendance/csv", reportsHandler.AttendanceCSV)
