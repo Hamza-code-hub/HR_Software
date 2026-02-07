@@ -42,6 +42,31 @@ Multi-tenant HR + Payroll + Accounting system for Pakistani software houses.
 
    API: `http://localhost:3000`
 
+### Run locally without Docker (recommended)
+
+- Scripts are provided in the `scripts/` directory to run backend and frontend without Docker.
+
+- Windows (PowerShell):
+
+  ```powershell
+  ./scripts/run-backend.ps1    # starts backend, runs migrations
+  ./scripts/run-frontend.ps1   # starts Flutter frontend (chrome)
+  ./scripts/run-all.ps1        # starts backend in background + frontend
+  ```
+
+- Unix / WSL / macOS (bash):
+
+  ```bash
+  ./scripts/run-backend.sh
+  ./scripts/run-frontend.sh
+  ```
+
+Notes:
+
+- The backend will create the database (user must have permission) and run the SQL files in `backend/migrations/*.up.sql`.
+- Configure `DATABASE_URL` and `JWT_SECRET` as needed before running.
+- If you prefer Docker, the Compose files were removed to simplify local development; run Postgres + Redis locally or via a service.
+
 ### Docker
 
 ```bash
@@ -116,12 +141,12 @@ docker-compose.yml
 
 ## Environment
 
-| Variable           | Description                    | Default (dev)        |
-|--------------------|--------------------------------|------------------------|
-| PORT               | API port                       | 3000                  |
-| DATABASE_URL       | PostgreSQL connection string   | postgres://...        |
-| JWT_SECRET         | JWT signing secret             | change-me-in-production |
-| JWT_ACCESS_EXPIRE_MIN | Access token TTL (min)     | 15                    |
-| JWT_REFRESH_EXPIRE_H  | Refresh token TTL (hours)  | 168                   |
-| REDIS_URL          | Redis (for workers later)      | redis://localhost:6379 |
-| ENV                | development / production       | development           |
+| Variable              | Description                  | Default (dev)           |
+| --------------------- | ---------------------------- | ----------------------- |
+| PORT                  | API port                     | 3000                    |
+| DATABASE_URL          | PostgreSQL connection string | postgres://...          |
+| JWT_SECRET            | JWT signing secret           | change-me-in-production |
+| JWT_ACCESS_EXPIRE_MIN | Access token TTL (min)       | 15                      |
+| JWT_REFRESH_EXPIRE_H  | Refresh token TTL (hours)    | 168                     |
+| REDIS_URL             | Redis (for workers later)    | redis://localhost:6379  |
+| ENV                   | development / production     | development             |

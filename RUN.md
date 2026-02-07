@@ -1,4 +1,5 @@
 # How to run HR & Accounting SaaS
+> **Note**: For running locally without Docker, see [LOCAL_RUN.md](LOCAL_RUN.md).
 
 ## Project overview
 
