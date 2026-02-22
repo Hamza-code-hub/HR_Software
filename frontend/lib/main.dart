@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/router.dart';
+import 'core/theme_provider.dart';
+import 'core/app_theme.dart';
 
 void main() {
   runApp(
@@ -16,13 +18,15 @@ class HRSaasApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(goRouterProvider);
+    final router    = ref.watch(goRouterProvider);
+    final themeMode = ref.watch(themeProvider);
+
     return MaterialApp.router(
-      title: 'HR & Accounting',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
+      title: 'HR & Accounting — CyberZeus',
+      debugShowCheckedModeBanner: false,
+      themeMode: themeMode,
+      theme:      buildLightTheme(),
+      darkTheme:  buildDarkTheme(),
       routerConfig: router,
     );
   }

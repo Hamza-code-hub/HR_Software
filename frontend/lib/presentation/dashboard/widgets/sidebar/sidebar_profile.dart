@@ -57,10 +57,10 @@ class SidebarProfile extends StatelessWidget {
                 child: avatarUrl == null
                     ? Text(
                         name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                         ),
                       )
                     : null,
@@ -72,8 +72,8 @@ class SidebarProfile extends StatelessWidget {
           // Name
           Text(
             name,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: Theme.of(context).cardColor,
               fontSize: 15,
               fontWeight: FontWeight.w600,
             ),

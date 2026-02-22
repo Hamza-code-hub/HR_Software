@@ -1,5 +1,5 @@
+// ignore_for_file: unused_element, unused_import, unused_local_variable
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 
 class NewJoinersWidget extends StatefulWidget {
   const NewJoinersWidget({super.key});
@@ -73,9 +73,9 @@ class _NewJoinersWidgetState extends State<NewJoinersWidget>
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.person_add_rounded,
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   size: 24,
                 ),
               ),
@@ -88,16 +88,16 @@ class _NewJoinersWidgetState extends State<NewJoinersWidget>
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.trending_up_rounded,
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       size: 16,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '+${growthRate.toStringAsFixed(1)}%',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: Theme.of(context).cardColor,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -115,10 +115,10 @@ class _NewJoinersWidgetState extends State<NewJoinersWidget>
             builder: (context, child) {
               return Text(
                 _countAnimation.value.floor().toString(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 48,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   height: 1,
                 ),
               );
@@ -162,13 +162,13 @@ class _NewJoinersWidgetState extends State<NewJoinersWidget>
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.3),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+                      border: Border.all(color: Theme.of(context).cardColor, width: 2),
                     ),
                     child: Center(
                       child: Text(
                         '+${newJoinersCount - 4}',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: Theme.of(context).cardColor,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -188,7 +188,7 @@ class _NewJoinersWidgetState extends State<NewJoinersWidget>
       width: 36,
       height: 36,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         shape: BoxShape.circle,
         border: Border.all(color: const Color(0xFF10B981), width: 2),
       ),

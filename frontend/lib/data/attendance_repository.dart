@@ -1,12 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../core/api_client.dart';
 
+// ────────────────────────────────────────────────────────────────
+// Model
+// ────────────────────────────────────────────────────────────────
 class AttendanceRecord {
-  final String id;
-  final String tenantId;
-  final String employeeId;
-  final String date;
+  final String  id;
+  final String  tenantId;
+  final String  employeeId;
+  final String? employeeName;
+  final String  date;
   final String? checkIn;
   final String? checkOut;
   final double? totalHours;
@@ -16,6 +19,7 @@ class AttendanceRecord {
     required this.id,
     required this.tenantId,
     required this.employeeId,
+    this.employeeName,
     required this.date,
     this.checkIn,
     this.checkOut,
@@ -25,38 +29,56 @@ class AttendanceRecord {
 
   factory AttendanceRecord.fromJson(Map<String, dynamic> json) {
     return AttendanceRecord(
-      id: json['id'] as String,
-      tenantId: json['tenant_id'] as String,
-      employeeId: json['employee_id'] as String,
-      date: json['date'] as String,
-      checkIn: json['check_in'] as String?,
-      checkOut: json['check_out'] as String?,
-      totalHours: (json['total_hours'] as num?)?.toDouble(),
-      status: json['status'] as String?,
+      id:           json['id']            as String,
+      tenantId:     json['tenant_id']     as String,
+      employeeId:   json['employee_id']   as String,
+      employeeName: json['employee_name'] as String?,
+      date:         json['date']          as String,
+      checkIn:      json['check_in']      as String?,
+      checkOut:     json['check_out']     as String?,
+      totalHours:   (json['total_hours']  as num?)?.toDouble(),
+      status:       json['status']        as String?,
     );
   }
 }
 
+// ────────────────────────────────────────────────────────────────
+// Repository
+// ────────────────────────────────────────────────────────────────
 final attendanceRepositoryProvider = Provider<AttendanceRepository>((ref) {
   return AttendanceRepository(ref.watch(apiClientProvider));
 });
 
 class AttendanceRepository {
   AttendanceRepository(this._client);
-
   final ApiClient _client;
 
   Future<List<AttendanceRecord>> list(int month, int year) async {
-    final res = await _client.dio.get('/api/attendance', queryParameters: {'month': month, 'year': year});
-    final list = res.data as List;
-    return list.map((e) => AttendanceRecord.fromJson(e as Map<String, dynamic>)).toList();
+    final res = await _client.get(
+      '/api/attendance',
+      queryParameters: {'month': month.toString(), 'year': year.toString()},
+    ) as List;
+    return res.map((e) => AttendanceRecord.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  Future<void> checkIn(String employeeId) async {
-    await _client.dio.post('/api/attendance/checkin', data: {'employee_id': employeeId});
+  Future<void> checkIn({String? employeeId}) async {
+    await _client.post('/api/attendance/checkin', body: {
+      if (employeeId != null) 'employee_id': employeeId,
+    });
   }
 
-  Future<void> checkOut(String employeeId) async {
-    await _client.dio.post('/api/attendance/checkout', data: {'employee_id': employeeId});
+  Future<void> checkOut({String? employeeId}) async {
+    await _client.post('/api/attendance/checkout', body: {
+      if (employeeId != null) 'employee_id': employeeId,
+    });
   }
 }
+
+// ────────────────────────────────────────────────────────────────
+// Provider
+// ────────────────────────────────────────────────────────────────
+final attendanceListProvider = FutureProvider.autoDispose.family<List<AttendanceRecord>, ({int month, int year})>(
+  (ref, args) async {
+    return ref.watch(attendanceRepositoryProvider).list(args.month, args.year);
+  },
+);

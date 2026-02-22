@@ -72,9 +72,9 @@ class _AttritionRateWidgetState extends State<AttritionRateWidget>
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.exit_to_app_rounded,
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   size: 24,
                 ),
               ),
@@ -93,14 +93,14 @@ class _AttritionRateWidgetState extends State<AttritionRateWidget>
                       isImprovement
                           ? Icons.trending_down_rounded
                           : Icons.trending_up_rounded,
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       size: 16,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '${trendChange.abs().toStringAsFixed(1)}%',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: Theme.of(context).cardColor,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -121,10 +121,10 @@ class _AttritionRateWidgetState extends State<AttritionRateWidget>
                   children: [
                     Text(
                       '${attritionRate.toStringAsFixed(1)}%',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         height: 1,
                       ),
                     ),
@@ -177,7 +177,7 @@ class _AttritionRateWidgetState extends State<AttritionRateWidget>
                           ),
                         ),
                         isCurved: true,
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         barWidth: 3,
                         isStrokeCapRound: true,
                         dotData: FlDotData(
@@ -185,7 +185,7 @@ class _AttritionRateWidgetState extends State<AttritionRateWidget>
                           getDotPainter: (spot, percent, barData, index) {
                             return FlDotCirclePainter(
                               radius: 4,
-                              color: Colors.white,
+                              color: Theme.of(context).cardColor,
                               strokeWidth: 2,
                               strokeColor: const Color(0xFFF59E0B),
                             );
@@ -226,7 +226,7 @@ class _AttritionRateWidgetState extends State<AttritionRateWidget>
                   attritionRate < industryAverage
                       ? Icons.check_circle_rounded
                       : Icons.warning_rounded,
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   size: 18,
                 ),
               ],

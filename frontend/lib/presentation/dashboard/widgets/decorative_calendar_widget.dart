@@ -28,7 +28,7 @@ class _DecorativeCalendarWidgetState extends State<DecorativeCalendarWidget> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: const Color(0xFFE2E8F0),
@@ -36,7 +36,7 @@ class _DecorativeCalendarWidgetState extends State<DecorativeCalendarWidget> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -56,9 +56,9 @@ class _DecorativeCalendarWidgetState extends State<DecorativeCalendarWidget> {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.calendar_month_rounded,
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   size: 20,
                 ),
               ),
@@ -119,7 +119,7 @@ class _DecorativeCalendarWidgetState extends State<DecorativeCalendarWidget> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey[600],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -219,7 +219,7 @@ class _DecorativeCalendarWidgetState extends State<DecorativeCalendarWidget> {
           label,
           style: TextStyle(
             fontSize: 11,
-            color: Colors.grey[700],
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ],

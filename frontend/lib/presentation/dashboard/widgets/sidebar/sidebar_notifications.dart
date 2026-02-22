@@ -43,10 +43,10 @@ class SidebarNotifications extends StatelessWidget {
                     color: Color(0xFFF59E0B),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.notifications_active,
                     size: 16,
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -54,10 +54,10 @@ class SidebarNotifications extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Pending Actions',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -80,8 +80,8 @@ class SidebarNotifications extends StatelessWidget {
                   ),
                   child: Text(
                     count.toString(),
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: Theme.of(context).cardColor,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),

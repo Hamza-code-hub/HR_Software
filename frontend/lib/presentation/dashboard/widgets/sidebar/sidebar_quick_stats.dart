@@ -118,7 +118,7 @@ class SidebarQuickStats extends ConsumerWidget {
               const Spacer(),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

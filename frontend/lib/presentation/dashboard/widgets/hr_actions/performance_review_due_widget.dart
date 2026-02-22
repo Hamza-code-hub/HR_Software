@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_import, unused_local_variable
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -49,11 +50,11 @@ class PerformanceReviewDueWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -73,9 +74,9 @@ class PerformanceReviewDueWidget extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.assessment_rounded,
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   size: 24,
                 ),
               ),
@@ -99,16 +100,16 @@ class PerformanceReviewDueWidget extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.warning_rounded,
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         size: 14,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '$overdueCount Overdue',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: Theme.of(context).cardColor,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -175,7 +176,7 @@ class PerformanceReviewDueWidget extends StatelessWidget {
                   Container(
                     height: 8,
                     decoration: BoxDecoration(
-                      color: Colors.grey[200],
+                      color: Theme.of(context).dividerColor,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -282,7 +283,7 @@ class PerformanceReviewDueWidget extends StatelessWidget {
                   label,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[700],
+                    color: Colors.grey,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
@@ -364,14 +365,14 @@ class PerformanceReviewDueWidget extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.business, size: 12, color: Colors.grey[600]),
+                    Icon(Icons.business, size: 12, color: Colors.grey),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         department,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey[600],
+                          color: Colors.grey,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -379,7 +380,7 @@ class PerformanceReviewDueWidget extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       '•',
-                      style: TextStyle(color: Colors.grey[400]),
+                      style: TextStyle(color: Colors.grey.withOpacity(0.5)),
                     ),
                     const SizedBox(width: 8),
                     Flexible(
@@ -406,7 +407,7 @@ class PerformanceReviewDueWidget extends StatelessWidget {
             ),
             child: Text(
               statusLabel,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontSize: 11,
                 fontWeight: FontWeight.bold,

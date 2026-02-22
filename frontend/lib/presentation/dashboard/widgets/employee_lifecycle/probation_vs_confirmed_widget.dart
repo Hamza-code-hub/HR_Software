@@ -45,11 +45,11 @@ class _ProbationVsConfirmedWidgetState
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -68,9 +68,9 @@ class _ProbationVsConfirmedWidgetState
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.badge_rounded,
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   size: 24,
                 ),
               ),
@@ -152,7 +152,7 @@ class _ProbationVsConfirmedWidgetState
                           'Total',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey[600],
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -225,7 +225,7 @@ class _ProbationVsConfirmedWidgetState
             '(${percentage.toStringAsFixed(1)}%)',
             style: TextStyle(
               fontSize: 13,
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],

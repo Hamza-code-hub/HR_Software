@@ -1,11 +1,12 @@
 package handler
 
 import (
+	"hr-saas/internal/middleware"
+	"hr-saas/internal/repository"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"hr-saas/internal/middleware"
-	"hr-saas/internal/repository"
 )
 
 type EmployeeHandler struct {
@@ -88,6 +89,56 @@ func (h *EmployeeHandler) Update(c *fiber.Ctx) error {
 	}
 	emp, _ := repository.GetEmployeeByID(c.Context(), h.pool, tenantID, id)
 	return c.JSON(emp)
+}
+
+func (h *EmployeeHandler) Me(c *fiber.Ctx) error {
+	tenantID, _ := c.Locals(middleware.ContextKeyTenantID).(string)
+	userID, _ := c.Locals(middleware.ContextKeyUserID).(string)
+	if tenantID == "" || userID == "" {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "tenant and user context required"})
+	}
+
+	var emp repository.Employee
+	var joiningDate *string
+	err := h.pool.QueryRow(c.Context(), `
+		SELECT id, tenant_id, user_id, employee_code, name, email, cnic, phone, designation, 
+		       joining_date::text, status, COALESCE(basic_salary, 0), created_at::text
+		FROM employees
+		WHERE user_id = $1 AND tenant_id = $2 AND deleted_at IS NULL
+		LIMIT 1
+	`, userID, tenantID).Scan(
+		&emp.ID, &emp.TenantID, &emp.UserID, &emp.EmployeeCode, &emp.Name, &emp.Email,
+		&emp.CNIC, &emp.Phone, &emp.Designation, &joiningDate, &emp.Status, &emp.BasicSalary, &emp.CreatedAt,
+	)
+	if err != nil {
+		// Return a partial record from user table if no employee record linked
+		return c.JSON(fiber.Map{
+			"id":          userID,
+			"user_id":     userID,
+			"tenant_id":   tenantID,
+			"name":        "",
+			"email":       "",
+			"designation": "",
+			"status":      "active",
+		})
+	}
+
+	result := fiber.Map{
+		"id":            emp.ID,
+		"tenant_id":     emp.TenantID,
+		"user_id":       emp.UserID,
+		"employee_code": emp.EmployeeCode,
+		"name":          emp.Name,
+		"email":         emp.Email,
+		"cnic":          emp.CNIC,
+		"phone":         emp.Phone,
+		"designation":   emp.Designation,
+		"joining_date":  joiningDate,
+		"status":        emp.Status,
+		"basic_salary":  emp.BasicSalary,
+		"created_at":    emp.CreatedAt,
+	}
+	return c.JSON(result)
 }
 
 func (h *EmployeeHandler) Delete(c *fiber.Ctx) error {

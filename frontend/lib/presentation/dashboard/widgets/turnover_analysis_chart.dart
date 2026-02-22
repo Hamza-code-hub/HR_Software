@@ -14,11 +14,11 @@ class TurnoverAnalysisChart extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -37,7 +37,7 @@ class TurnoverAnalysisChart extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.people_outline, color: Colors.white, size: 24),
+                child: Icon(Icons.people_outline, color: Theme.of(context).cardColor, size: 24),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -67,8 +67,8 @@ class TurnoverAnalysisChart extends StatelessWidget {
                       String label = rodIndex == 0 ? 'Joiners' : 'Leavers';
                       return BarTooltipItem(
                         '$label\n${rod.toY.toInt()}',
-                        const TextStyle(
-                          color: Colors.white,
+                        TextStyle(
+                          color: Theme.of(context).cardColor,
                           fontWeight: FontWeight.bold,
                         ),
                       );
@@ -85,7 +85,7 @@ class TurnoverAnalysisChart extends StatelessWidget {
                           value.toInt().toString(),
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         );
                       },
@@ -102,7 +102,7 @@ class TurnoverAnalysisChart extends StatelessWidget {
                               data[value.toInt()].month,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey[600],
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                               ),
                             ),
                           );
@@ -188,7 +188,7 @@ class TurnoverAnalysisChart extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey[600],
+            color: Colors.grey,
           ),
         ),
       ],

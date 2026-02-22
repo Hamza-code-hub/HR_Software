@@ -38,6 +38,9 @@ dependencies:
   http: ^1.2.0
   pluto_grid: ^8.0.0
   syncfusion_flutter_charts: ^24.2.9
+  flutter_secure_storage: ^9.2.2
+  shared_preferences: ^2.3.2
+  jwt_decoder: ^2.0.1
 
 dev_dependencies:
   flutter_test:

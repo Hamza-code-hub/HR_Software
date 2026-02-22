@@ -43,11 +43,11 @@ class _WfhOnsiteRatioWidgetState extends State<WfhOnsiteRatioWidget>
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -67,9 +67,9 @@ class _WfhOnsiteRatioWidgetState extends State<WfhOnsiteRatioWidget>
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.location_on_rounded,
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   size: 24,
                 ),
               ),
@@ -102,7 +102,7 @@ class _WfhOnsiteRatioWidgetState extends State<WfhOnsiteRatioWidget>
                 'Employees Today',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey[600],
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -145,21 +145,21 @@ class _WfhOnsiteRatioWidgetState extends State<WfhOnsiteRatioWidget>
                                   ? '${onsitePercentage.toStringAsFixed(1)}%'
                                   : '',
                               radius: touchedIndex == 0 ? 90 : 80,
-                              titleStyle: const TextStyle(
+                              titleStyle: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: Theme.of(context).cardColor,
                               ),
                               badgeWidget: touchedIndex != 0
                                   ? null
                                   : Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: Colors.white,
+                                        color: Theme.of(context).cardColor,
                                         shape: BoxShape.circle,
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withOpacity(0.1),
+                                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
                                             blurRadius: 8,
                                           ),
                                         ],
@@ -179,21 +179,21 @@ class _WfhOnsiteRatioWidgetState extends State<WfhOnsiteRatioWidget>
                                   ? '${wfhPercentage.toStringAsFixed(1)}%'
                                   : '',
                               radius: touchedIndex == 1 ? 90 : 80,
-                              titleStyle: const TextStyle(
+                              titleStyle: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: Theme.of(context).cardColor,
                               ),
                               badgeWidget: touchedIndex != 1
                                   ? null
                                   : Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: Colors.white,
+                                        color: Theme.of(context).cardColor,
                                         shape: BoxShape.circle,
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withOpacity(0.1),
+                                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
                                             blurRadius: 8,
                                           ),
                                         ],
@@ -281,7 +281,7 @@ class _WfhOnsiteRatioWidgetState extends State<WfhOnsiteRatioWidget>
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[700],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 4),
@@ -289,7 +289,7 @@ class _WfhOnsiteRatioWidgetState extends State<WfhOnsiteRatioWidget>
             '${percentage.toStringAsFixed(1)}%',
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],

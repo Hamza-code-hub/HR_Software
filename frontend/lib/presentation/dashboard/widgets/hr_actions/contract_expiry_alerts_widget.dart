@@ -37,11 +37,11 @@ class ContractExpiryAlertsWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -61,9 +61,9 @@ class ContractExpiryAlertsWidget extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.schedule_rounded,
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   size: 24,
                 ),
               ),
@@ -261,7 +261,7 @@ class ContractExpiryAlertsWidget extends StatelessWidget {
                       ),
                       child: Text(
                         urgencyLabel,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -275,20 +275,20 @@ class ContractExpiryAlertsWidget extends StatelessWidget {
                   role,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.grey[700],
+                    color: Colors.grey,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.calendar_today, size: 12, color: Colors.grey[600]),
+                    Icon(Icons.calendar_today, size: 12, color: Colors.grey),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         'Expires: ${DateFormat('MMM d, yyyy').format(expiryDate)}',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey[600],
+                          color: Colors.grey,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -307,7 +307,7 @@ class ContractExpiryAlertsWidget extends StatelessWidget {
                         type,
                         style: TextStyle(
                           fontSize: 10,
-                          color: Colors.grey[700],
+                          color: Colors.grey,
                           fontWeight: FontWeight.w600,
                         ),
                         overflow: TextOverflow.ellipsis,

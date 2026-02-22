@@ -208,32 +208,22 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
     final sidePadding = isUltraWide ? 32.0 : (isWide ? 28.0 : (isDesktop ? 24.0 : (isTablet ? 20.0 : 16.0)));
     final cardSpacing = isUltraWide ? 20.0 : (isWide ? 18.0 : (isDesktop ? 16.0 : (isTablet ? 14.0 : 12.0)));
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: Row(
-        children: [
-          if (!isMobile) _buildSidebar(context),
-          Expanded(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: EdgeInsets.all(sidePadding),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: isUltraWide ? 2400 : double.infinity,
+            ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildAppBar(context, isMobile),
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return SingleChildScrollView(
-                        padding: EdgeInsets.all(sidePadding),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: isUltraWide ? 2400 : double.infinity,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // Welcome Banner
-                              FadeTransition(
-                                opacity: _fadeAnimation,
-                                child: _buildWelcomeBanner(isDesktop || isWide || isUltraWide),
-                              ),
+                // Welcome Banner
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: _buildWelcomeBanner(isDesktop || isWide || isUltraWide),
+                ),
                               SizedBox(height: cardSpacing),
 
                               // Main Content Area with 75/25 Split (only for top 2 rows)
@@ -363,20 +353,11 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                                 opacity: _fadeAnimation,
                                 child: _buildAttendanceAnalyticsSection(isDesktop, isWide, isUltraWide, isTablet, cardSpacing),
                               ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                _buildStatusBar(),
               ],
             ),
           ),
-        ],
-      ),
-      drawer: isMobile ? Drawer(child: _buildSidebar(context)) : null,
+        );
+      },
     );
   }
 
@@ -548,19 +529,19 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
                   ),
-                  child: const Icon(Icons.event_note, color: Colors.white, size: 24),
+                  child: Icon(Icons.event_note, color: Theme.of(context).cardColor, size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Upcoming Events',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -582,8 +563,8 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
           // Events List with Enhanced Styling - Scrollable
           Expanded(
             child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(20),
@@ -596,7 +577,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.event_available, 
-                            color: Colors.grey[300], 
+                            color: Theme.of(context).dividerColor, 
                             size: 48
                           ),
                           const SizedBox(height: 12),
@@ -604,7 +585,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                             'No upcoming events',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey[600],
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -615,7 +596,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                       itemCount: events.length,
                       separatorBuilder: (context, index) => Divider(
                         height: 12,
-                        color: Colors.grey[200],
+                        color: Theme.of(context).dividerColor,
                       ),
                       itemBuilder: (context, index) {
                         return _buildAttractiveEventItem(events[index], index);
@@ -684,7 +665,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                     ),
                   ],
                 ),
-                child: Icon(event.icon, color: Colors.white, size: 24),
+                child: Icon(event.icon, color: Theme.of(context).cardColor, size: 24),
               ),
               const SizedBox(width: 16),
               
@@ -695,22 +676,22 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                   children: [
                     Text(
                       event.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.access_time, size: 13, color: Colors.grey[500]),
+                        Icon(Icons.access_time, size: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
                         const SizedBox(width: 4),
                         Text(
                           DateFormat('MMM dd, hh:mm a').format(event.date),
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -944,7 +925,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                   ),
                   Icon(
                     _showEmployeeLifecycle ? Icons.expand_less : Icons.expand_more,
-                    color: Colors.grey[600],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ],
               ),
@@ -1027,7 +1008,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                   ),
                   Icon(
                     _showAttendanceAnalytics ? Icons.expand_less : Icons.expand_more,
-                    color: Colors.grey[600],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ],
               ),
@@ -1103,104 +1084,6 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
     );
   }
 
-  Widget _buildAnalyticsSection(bool isDesktop, bool isWide, bool isUltraWide, bool isTablet, double spacing) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionHeader('Organizational Intelligence', Icons.insights_rounded, const Color(0xFF0EA5E9)),
-        SizedBox(height: spacing),
-        
-        // Lifecycle Row
-        if (isDesktop || isWide || isUltraWide)
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Expanded(child: NewJoinersWidget()),
-                SizedBox(width: spacing),
-                const Expanded(child: AttritionRateWidget()),
-                SizedBox(width: spacing),
-                const Expanded(child: ProbationVsConfirmedWidget()),
-              ],
-            ),
-          )
-        else
-          Column(
-            children: [
-              const NewJoinersWidget(),
-              SizedBox(height: spacing),
-              const AttritionRateWidget(),
-              SizedBox(height: spacing),
-              const ProbationVsConfirmedWidget(),
-            ],
-          ),
-        
-        SizedBox(height: spacing),
-
-        // Attendance Row
-        if (isDesktop || isWide || isUltraWide || isTablet)
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Expanded(flex: 3, child: AbsenteeismTrendChart()),
-                SizedBox(width: spacing),
-                const Expanded(flex: 2, child: WfhOnsiteRatioWidget()),
-              ],
-            ),
-          )
-        else
-          Column(
-            children: [
-              const AbsenteeismTrendChart(),
-              SizedBox(height: spacing),
-              const WfhOnsiteRatioWidget(),
-            ],
-          ),
-        
-        SizedBox(height: spacing),
-
-        // Charts Row
-        if (isDesktop || isWide || isUltraWide || isTablet)
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Expanded(child: DepartmentAttendanceChart()),
-                SizedBox(width: spacing),
-                Expanded(
-                  child: RecruitmentFunnelChart(
-                    data: [
-                      FunnelStage(stage: 'Applications', count: 450, percentage: 100),
-                      FunnelStage(stage: 'Screening', count: 180, percentage: 40),
-                      FunnelStage(stage: 'Interviews', count: 45, percentage: 10),
-                      FunnelStage(stage: 'Offers', count: 12, percentage: 2.6),
-                      FunnelStage(stage: 'Hired', count: 8, percentage: 1.7),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          )
-        else
-          Column(
-            children: [
-              const DepartmentAttendanceChart(),
-              SizedBox(height: spacing),
-              RecruitmentFunnelChart(
-                data: [
-                  FunnelStage(stage: 'Applications', count: 450, percentage: 100),
-                  FunnelStage(stage: 'Screening', count: 180, percentage: 40),
-                  FunnelStage(stage: 'Interviews', count: 45, percentage: 10),
-                  FunnelStage(stage: 'Offers', count: 12, percentage: 2.6),
-                  FunnelStage(stage: 'Hired', count: 8, percentage: 1.7),
-                ],
-              ),
-            ],
-          ),
-      ],
-    );
-  }
 
   // Key Metrics with equal heights
   Widget _buildKeyMetrics(HRDashboardStats stats, bool isDesktop, bool isWide, bool isUltraWide, bool isTablet, double spacing) {
@@ -1214,7 +1097,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(child: _buildMetricCard('Monthly Payroll', 'PKR ${_formatCurrency(stats.monthlyPayroll)}', Icons.account_balance_wallet, const Color(0xFF8B5CF6), '${stats.activeEmployees} employees')),
+                Expanded(child: _buildMetricCard('Employee Growth', '${stats.employeeGrowth}%', Icons.trending_up, const Color(0xFF8B5CF6), 'Annualized rate')),
                 SizedBox(width: spacing),
                 Expanded(child: _buildMetricCard('Overtime Hours', '${stats.overtimeHours} hrs', Icons.access_time_filled, const Color(0xFFF59E0B), 'This month')),
                 SizedBox(width: spacing),
@@ -1231,7 +1114,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(child: _buildMetricCard('Monthly Payroll', 'PKR ${_formatCurrency(stats.monthlyPayroll)}', Icons.account_balance_wallet, const Color(0xFF8B5CF6), '${stats.activeEmployees} employees')),
+                    Expanded(child: _buildMetricCard('Employee Growth', '${stats.employeeGrowth}%', Icons.trending_up, const Color(0xFF8B5CF6), 'Annualized rate')),
                     SizedBox(width: spacing),
                     Expanded(child: _buildMetricCard('Overtime Hours', '${stats.overtimeHours} hrs', Icons.access_time_filled, const Color(0xFFF59E0B), 'This month')),
                   ],
@@ -1341,7 +1224,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(greetingIcon, color: Colors.white, size: 28),
+            child: Icon(greetingIcon, color: Theme.of(context).cardColor, size: 28),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -1353,7 +1236,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                   style: TextStyle(
                     fontSize: isLargeScreen ? 26 : 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -1393,12 +1276,12 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.white, size: 16),
+          Icon(icon, color: Theme.of(context).cardColor, size: 16),
           const SizedBox(width: 6),
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: Theme.of(context).cardColor,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -1469,10 +1352,10 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                       children: [
                         Text(
                           DateFormat('MMMM yyyy').format(now),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: Theme.of(context).cardColor,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -1514,10 +1397,10 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                           children: [
                             Text(
                               eventsThisMonth.toString(),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: Theme.of(context).cardColor,
                               ),
                             ),
                             const SizedBox(height: 1),
@@ -1545,10 +1428,10 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                           children: [
                             Text(
                               '${daysInMonth}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: Theme.of(context).cardColor,
                               ),
                             ),
                             const SizedBox(height: 1),
@@ -1576,10 +1459,10 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                           children: [
                             Text(
                               '${((now.day / daysInMonth) * 100).toStringAsFixed(0)}%',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: Theme.of(context).cardColor,
                               ),
                             ),
                             const SizedBox(height: 1),
@@ -1603,8 +1486,8 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
           // Calendar Grid
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(16),
                 bottomRight: Radius.circular(16),
@@ -1624,7 +1507,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.grey[600],
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ),
@@ -1661,7 +1544,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                                         : null,
                                     color: isToday ? null : (isValidDay ? Colors.grey[50] : Colors.transparent),
                                     borderRadius: BorderRadius.circular(6),
-                                    border: !isToday && isValidDay ? Border.all(color: Colors.grey[200]!, width: 0.5) : null,
+                                    border: !isToday && isValidDay ? Border.all(color: Theme.of(context).dividerColor!, width: 0.5) : null,
                                   ),
                                   child: Material(
                                     color: Colors.transparent,
@@ -1711,7 +1594,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
           onTap: () {},
           borderRadius: BorderRadius.circular(8),
           splashColor: Colors.white.withOpacity(0.2),
-          child: Icon(icon, color: Colors.white, size: 16),
+          child: Icon(icon, color: Theme.of(context).cardColor, size: 16),
         ),
       ),
     );
@@ -1756,18 +1639,18 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                     color: Colors.white.withOpacity(0.25),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.event_note, color: Colors.white, size: 18),
+                  child: Icon(Icons.event_note, color: Theme.of(context).cardColor, size: 18),
                 ),
                 const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Upcoming Events',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                       ),
                     ),
                     Text(
@@ -1785,8 +1668,8 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
 
           // Events List
           Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(16),
                 bottomRight: Radius.circular(16),
@@ -1801,7 +1684,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                         child: Column(
                           children: [
                             Icon(Icons.event_available, 
-                              color: Colors.grey[300], 
+                              color: Theme.of(context).dividerColor, 
                               size: 32
                             ),
                             const SizedBox(height: 8),
@@ -1809,7 +1692,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                               'No upcoming events',
                               style: TextStyle(
                                 fontSize: 13,
-                                color: Colors.grey[600],
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -1823,7 +1706,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                         children: [
                           _buildCompactEventItem(event),
                           if (!isLast) 
-                            Divider(height: 1, color: Colors.grey[200], indent: 50, endIndent: 16),
+                            Divider(height: 1, color: Theme.of(context).dividerColor, indent: 50, endIndent: 16),
                         ],
                       );
                     }),
@@ -1838,12 +1721,12 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withOpacity(0.2)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -1866,7 +1749,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
             title,
             style: TextStyle(
               fontSize: 13,
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -1883,7 +1766,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
           const SizedBox(height: 8),
           Text(
             subtitle,
-            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -1894,11 +1777,11 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -1918,7 +1801,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.flash_on, color: Colors.white, size: 20),
+                child: Icon(Icons.flash_on, color: Theme.of(context).cardColor, size: 20),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -1964,7 +1847,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                   gradient: LinearGradient(colors: [color, color.withOpacity(0.7)]),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, color: Colors.white, size: 18),
+                child: Icon(icon, color: Theme.of(context).cardColor, size: 18),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1973,11 +1856,11 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[400]),
+              Icon(Icons.arrow_forward_ios, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5)),
             ],
           ),
         ),
@@ -1992,11 +1875,11 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
       constraints: const BoxConstraints(maxHeight: 500),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -2015,7 +1898,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.history_rounded, color: Colors.white, size: 20),
+                child: Icon(Icons.history_rounded, color: Theme.of(context).cardColor, size: 20),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -2033,7 +1916,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
               itemCount: activities.length,
               separatorBuilder: (context, index) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Divider(color: Colors.grey[200], height: 1),
+                child: Divider(color: Theme.of(context).dividerColor, height: 1),
               ),
               itemBuilder: (context, index) {
                 final activity = activities[index];
@@ -2064,7 +1947,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                           const SizedBox(height: 2),
                           Text(
                             activity.description,
-                            style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                            style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -2073,7 +1956,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                     ),
                     Text(
                       activity.time,
-                      style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+                      style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                   ],
                 );
@@ -2093,11 +1976,11 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
       height: 380,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -2116,7 +1999,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.history_rounded, color: Colors.white, size: 18),
+                child: Icon(Icons.history_rounded, color: Theme.of(context).cardColor, size: 18),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -2137,7 +2020,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
               itemCount: activities.length > 6 ? 6 : activities.length,
               separatorBuilder: (context, index) => Divider(
                 height: 12,
-                color: Colors.grey[200],
+                color: Theme.of(context).dividerColor,
               ),
               itemBuilder: (context, index) {
                 final activity = activities[index];
@@ -2168,7 +2051,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                           const SizedBox(height: 2),
                           Text(
                             activity.description,
-                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -2225,19 +2108,19 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
                   ),
-                  child: const Icon(Icons.event_note, color: Colors.white, size: 18),
+                  child: Icon(Icons.event_note, color: Theme.of(context).cardColor, size: 18),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Upcoming Events',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -2265,7 +2148,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.event_available, 
-                      color: Colors.grey[300], 
+                      color: Theme.of(context).dividerColor, 
                       size: 40
                     ),
                     const SizedBox(height: 8),
@@ -2273,7 +2156,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                       'No upcoming events',
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey[600],
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -2287,7 +2170,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                 itemCount: events.length,
                 separatorBuilder: (context, index) => Divider(
                   height: 12,
-                  color: Colors.grey[200],
+                  color: Theme.of(context).dividerColor,
                 ),
                 itemBuilder: (context, index) {
                   final event = events[index];
@@ -2336,7 +2219,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
             ),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(event.icon, color: Colors.white, size: 18),
+          child: Icon(event.icon, color: Theme.of(context).cardColor, size: 18),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -2345,10 +2228,10 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
             children: [
               Text(
                 event.title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -2358,7 +2241,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                 DateFormat('MMM dd, hh:mm a').format(event.date),
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[600],
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -2392,10 +2275,10 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
     return Container(
       height: 40,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -2410,7 +2293,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
           const Spacer(),
           Text(
             'Updated: ${DateFormat('hh:mm a').format(DateTime.now())}',
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -2426,7 +2309,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey[700],
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -2466,7 +2349,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                   height: 32,
                   child: IconButton(
                     padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.menu, color: Colors.white, size: 24),
+                    icon: Icon(Icons.menu, color: Theme.of(context).cardColor, size: 24),
                     onPressed: () {
                       try {
                         Scaffold.of(context).openDrawer();
@@ -2494,7 +2377,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                 child: Text(
                   isMobile ? 'HR System' : 'HR Management System',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     fontSize: titleFontSize,
                     fontWeight: FontWeight.bold,
                   ),
@@ -2518,7 +2401,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                     child: Badge(
                       label: const Text('8', style: TextStyle(fontSize: 9)),
                       backgroundColor: const Color(0xFFEF4444),
-                      child: Icon(Icons.notifications_outlined, color: Colors.white, size: iconSize),
+                      child: Icon(Icons.notifications_outlined, color: Theme.of(context).cardColor, size: iconSize),
                     ),
                   ),
                 ),
@@ -2532,7 +2415,7 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                       color: Colors.white.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(Icons.settings_outlined, color: Colors.white, size: iconSize),
+                    child: Icon(Icons.settings_outlined, color: Theme.of(context).cardColor, size: iconSize),
                   ),
                 ),
               ],
@@ -2550,17 +2433,17 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
 
     return Container(
       width: 260,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black26,
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.26),
             blurRadius: 10,
-            offset: Offset(2, 0),
+            offset: const Offset(2, 0),
           ),
         ],
       ),
@@ -2593,11 +2476,11 @@ class _HRDashboardScreenState extends ConsumerState<HRDashboardScreen>
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Human Resource\nManagement',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     height: 1.4,
@@ -3200,12 +3083,12 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         border: priority != 'normal' ? Border.all(color: priorityColor.withOpacity(0.3), width: 1.5) : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -3226,7 +3109,7 @@ class _StatCard extends StatelessWidget {
                   gradient: LinearGradient(colors: [color, color.withOpacity(0.7)]),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, color: Colors.white, size: 16),
+                child: Icon(icon, color: Theme.of(context).cardColor, size: 16),
               ),
               Flexible(
                 child: Container(
@@ -3254,7 +3137,7 @@ class _StatCard extends StatelessWidget {
             title,
             style: TextStyle(
               fontSize: 10,
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
             ),
             maxLines: 1,
@@ -3302,7 +3185,7 @@ class _StatCard extends StatelessWidget {
           else
             Text(
               subtitle,
-              style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
             ),

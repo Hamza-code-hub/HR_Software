@@ -33,8 +33,9 @@ class ApiService {
   // Generic GET request
   Future<Map<String, dynamic>> get(String endpoint) async {
     try {
+      final uri = Uri.parse('$baseUrl$endpoint');
       final response = await http.get(
-        Uri.parse('$baseUrl$endpoint'),
+        uri,
         headers: _getHeaders(),
       );
 
@@ -58,8 +59,9 @@ class ApiService {
     Map<String, dynamic> body,
   ) async {
     try {
+      final uri = Uri.parse('$baseUrl$endpoint');
       final response = await http.post(
-        Uri.parse('$baseUrl$endpoint'),
+        uri,
         headers: _getHeaders(),
         body: json.encode(body),
       );

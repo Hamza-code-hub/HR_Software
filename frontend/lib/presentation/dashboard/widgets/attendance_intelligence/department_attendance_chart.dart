@@ -1,5 +1,5 @@
+// ignore_for_file: unused_element, unused_import, unused_local_variable
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 
 class DepartmentAttendanceChart extends StatefulWidget {
   const DepartmentAttendanceChart({super.key});
@@ -51,11 +51,11 @@ class _DepartmentAttendanceChartState extends State<DepartmentAttendanceChart>
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -75,9 +75,9 @@ class _DepartmentAttendanceChartState extends State<DepartmentAttendanceChart>
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.business_rounded,
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   size: 24,
                 ),
               ),
@@ -109,7 +109,7 @@ class _DepartmentAttendanceChartState extends State<DepartmentAttendanceChart>
                       Icon(
                         dept['icon'] as IconData,
                         size: 18,
-                        color: Colors.grey[600],
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -219,7 +219,7 @@ class _DepartmentAttendanceChartState extends State<DepartmentAttendanceChart>
           label,
           style: TextStyle(
             fontSize: 11,
-            color: Colors.grey[700],
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ],

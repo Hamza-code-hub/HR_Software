@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_import, unused_local_variable
 import 'package:flutter/material.dart';
 
 class RecruitmentFunnelChart extends StatelessWidget {
@@ -13,11 +14,11 @@ class RecruitmentFunnelChart extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -36,7 +37,7 @@ class RecruitmentFunnelChart extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.filter_list, color: Colors.white, size: 24),
+                child: Icon(Icons.filter_list, color: Theme.of(context).cardColor, size: 24),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -99,7 +100,7 @@ class RecruitmentFunnelChart extends StatelessWidget {
                 Expanded(
                   child: Text(
                     stage.stage,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -112,7 +113,7 @@ class RecruitmentFunnelChart extends StatelessWidget {
                   children: [
                     Text(
                       stage.count.toString(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -135,7 +136,7 @@ class RecruitmentFunnelChart extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Icon(
                 Icons.arrow_downward,
-                color: Colors.grey[400],
+                color: Colors.grey.withOpacity(0.5),
                 size: 20,
               ),
             ),

@@ -17,7 +17,7 @@ func WithTenant(ctx context.Context, pool *pgxpool.Pool, tenantID string, fn fun
 		return err
 	}
 	defer tx.Rollback(ctx)
-	_, err = tx.Exec(ctx, "SET LOCAL app.tenant_id = $1", tenantID)
+	_, err = tx.Exec(ctx, "SELECT set_config('app.tenant_id', $1, true)", tenantID)
 	if err != nil {
 		return err
 	}

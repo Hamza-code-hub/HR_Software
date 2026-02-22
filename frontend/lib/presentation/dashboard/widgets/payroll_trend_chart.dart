@@ -13,14 +13,12 @@ class PayrollTrendChart extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: Box
-
-Decoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -39,7 +37,7 @@ Decoration(
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.trending_up, color: Colors.white, size: 24),
+                child: Icon(Icons.trending_up, color: Theme.of(context).cardColor, size: 24),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -80,7 +78,7 @@ Decoration(
                           '₨${(value / 1000000).toStringAsFixed(1)}M',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         );
                       },
@@ -97,7 +95,7 @@ Decoration(
                               data[value.toInt()].month,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey[600],
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                               ),
                             ),
                           );
@@ -149,7 +147,7 @@ Decoration(
                       return FlSpot(e.key.toDouble(), e.value.yearAgo);
                     }).toList(),
                     isCurved: true,
-                    color: Colors.grey[400],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
                     barWidth: 2,
                     isStrokeCapRound: true,
                     dotData: const FlDotData(show: false),
@@ -190,7 +188,7 @@ Decoration(
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey[600],
+            color: Colors.grey,
           ),
         ),
       ],

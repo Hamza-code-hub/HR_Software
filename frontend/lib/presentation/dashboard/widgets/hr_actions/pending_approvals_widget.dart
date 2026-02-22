@@ -23,11 +23,11 @@ class PendingApprovalsWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -47,9 +47,9 @@ class PendingApprovalsWidget extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.pending_actions_rounded,
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   size: 24,
                 ),
               ),
@@ -73,16 +73,16 @@ class PendingApprovalsWidget extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.priority_high_rounded,
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         size: 14,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '$urgentCount Urgent',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: Theme.of(context).cardColor,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -122,7 +122,7 @@ class PendingApprovalsWidget extends StatelessWidget {
                     'Requiring Action',
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey[600],
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -207,7 +207,7 @@ class PendingApprovalsWidget extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[700],
+              color: Colors.grey,
             ),
           ),
         ),
@@ -270,7 +270,7 @@ class PendingApprovalsWidget extends StatelessWidget {
                           color: const Color(0xFFEF4444),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text(
+                        child: Text(
                           'URGENT',
                           style: TextStyle(
                             color: Colors.white,
@@ -286,7 +286,7 @@ class PendingApprovalsWidget extends StatelessWidget {
                   subtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: Colors.grey,
                   ),
                 ),
               ],

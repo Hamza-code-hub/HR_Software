@@ -58,12 +58,12 @@ func Load() *Config {
 			Env:  getEnv("ENV", "development"),
 		},
 		Database: DatabaseConfig{
-			URL: getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/hr_saas?sslmode=disable"),
+			URL: getEnv("DATABASE_URL", "postgres://postgres:123456@localhost:5432/hr_saas?sslmode=disable"),
 		},
 		JWT: JWTConfig{
-			Secret:          getEnv("JWT_SECRET", "change-me-in-production"),
-			AccessExpireMin:  accessMin,
-			RefreshExpireH:   refreshH,
+			Secret:          getEnv("JWT_SECRET", "dev-secret-123"),
+			AccessExpireMin: accessMin,
+			RefreshExpireH:  refreshH,
 		},
 		Redis: RedisConfig{
 			URL: getEnv("REDIS_URL", "redis://localhost:6379"),

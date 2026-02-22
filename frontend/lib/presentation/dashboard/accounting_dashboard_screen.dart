@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import 'widgets/payroll_trend_chart.dart';
 
 // Mock providers - will be replaced with real API calls
 final accountingStatsProvider = Provider((ref) {
@@ -32,7 +33,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
     final isTablet = screenWidth > 768 && screenWidth <= 1200;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
         padding: EdgeInsets.all(isDesktop ? 32 : 24),
         child: Column(
@@ -48,6 +49,19 @@ class AccountingDashboardScreen extends ConsumerWidget {
 
             // Revenue vs Expenses Chart
             _buildRevenueExpensesChart(),
+            const SizedBox(height: 24),
+
+            // Payroll Trend Chart
+            PayrollTrendChart(
+              data: [
+                PayrollTrendData(month: 'Jan', amount: 12000000, yearAgo: 10500000),
+                PayrollTrendData(month: 'Feb', amount: 12100000, yearAgo: 10600000),
+                PayrollTrendData(month: 'Mar', amount: 12200000, yearAgo: 10800000),
+                PayrollTrendData(month: 'Apr', amount: 12500000, yearAgo: 11000000),
+                PayrollTrendData(month: 'May', amount: 12400000, yearAgo: 11200000),
+                PayrollTrendData(month: 'Jun', amount: 12600000, yearAgo: 11300000),
+              ],
+            ),
             const SizedBox(height: 24),
 
             // Cash Flow & Expense Breakdown
@@ -139,7 +153,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.account_balance,
               size: 48,
               color: Colors.white,
@@ -228,7 +242,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.grey.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -253,7 +267,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
                 subtitle,
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.grey[600],
+                  color: Colors.grey,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -274,7 +288,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
                 title,
                 style: TextStyle(
                   fontSize: 13,
-                  color: Colors.grey[600],
+                  color: Colors.grey,
                 ),
               ),
             ],
@@ -302,7 +316,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.grey.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -321,7 +335,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.show_chart, color: Colors.white, size: 24),
+                child: Icon(Icons.show_chart, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -361,7 +375,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
                       getTitlesWidget: (value, meta) {
                         return Text(
                           '₨${(value / 1000000).toStringAsFixed(1)}M',
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
                         );
                       },
                     ),
@@ -375,7 +389,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
                               data[value.toInt()]['month'].toString(),
-                              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                              style: TextStyle(fontSize: 12, color: Colors.grey),
                             ),
                           );
                         }
@@ -434,7 +448,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.grey.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -453,7 +467,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.waterfall_chart, color: Colors.white, size: 24),
+                child: Icon(Icons.waterfall_chart, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -527,7 +541,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.grey.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -546,7 +560,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.pie_chart, color: Colors.white, size: 24),
+                child: Icon(Icons.pie_chart, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -588,7 +602,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
               Expanded(
                 child: Text(
                   category,
-                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
               ),
               Text(
@@ -620,7 +634,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.grey.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -639,7 +653,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.access_time, color: Colors.white, size: 24),
+                child: Icon(Icons.access_time, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -678,7 +692,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
           Expanded(
             child: Text(
               label,
-              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+              style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
           ),
           Text(
@@ -704,7 +718,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.grey.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -723,7 +737,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.compare_arrows, color: Colors.white, size: 24),
+                child: Icon(Icons.compare_arrows, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -781,7 +795,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'Budget: ₨${_formatCurrency(budget)}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                     const SizedBox(height: 4),
                     ClipRRect(
@@ -789,7 +803,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
                       child: LinearProgressIndicator(
                         value: 1.0,
                         backgroundColor: Colors.grey[200],
-                        color: Colors.grey[400],
+                        color: Colors.grey.withOpacity(0.5),
                         minHeight: 6,
                       ),
                     ),
@@ -803,7 +817,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'Actual: ₨${_formatCurrency(actual)}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                     const SizedBox(height: 4),
                     ClipRRect(
@@ -839,7 +853,7 @@ class AccountingDashboardScreen extends ConsumerWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          style: TextStyle(fontSize: 12, color: Colors.grey),
         ),
       ],
     );

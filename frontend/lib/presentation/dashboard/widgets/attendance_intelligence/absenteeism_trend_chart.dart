@@ -51,11 +51,11 @@ class _AbsenteeismTrendChartState extends State<AbsenteeismTrendChart>
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -75,9 +75,9 @@ class _AbsenteeismTrendChartState extends State<AbsenteeismTrendChart>
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.trending_down_rounded,
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   size: 24,
                 ),
               ),
@@ -141,7 +141,7 @@ class _AbsenteeismTrendChartState extends State<AbsenteeismTrendChart>
             'Today\'s Rate',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 32),
@@ -160,7 +160,7 @@ class _AbsenteeismTrendChartState extends State<AbsenteeismTrendChart>
                       horizontalInterval: 2,
                       getDrawingHorizontalLine: (value) {
                         return FlLine(
-                          color: Colors.grey[200],
+                          color: Theme.of(context).dividerColor,
                           strokeWidth: 1,
                         );
                       },
@@ -174,7 +174,7 @@ class _AbsenteeismTrendChartState extends State<AbsenteeismTrendChart>
                             return Text(
                               '${value.toInt()}%',
                               style: TextStyle(
-                                color: Colors.grey[600],
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 fontSize: 12,
                               ),
                             );
@@ -192,7 +192,7 @@ class _AbsenteeismTrendChartState extends State<AbsenteeismTrendChart>
                                 child: Text(
                                   weeklyData[value.toInt()]['day'],
                                   style: TextStyle(
-                                    color: Colors.grey[600],
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -267,7 +267,7 @@ class _AbsenteeismTrendChartState extends State<AbsenteeismTrendChart>
                           (i) => FlSpot(i.toDouble(), averageRate),
                         ),
                         isCurved: false,
-                        color: Colors.grey[400],
+                        color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
                         barWidth: 2,
                         dashArray: [5, 5],
                         dotData: const FlDotData(show: false),
@@ -345,7 +345,7 @@ class _AbsenteeismTrendChartState extends State<AbsenteeismTrendChart>
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey[700],
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ],
